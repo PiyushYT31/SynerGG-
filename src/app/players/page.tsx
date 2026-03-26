@@ -92,7 +92,8 @@ export default function PlayersPage() {
     });
 
     const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
-        setFilters(prev => ({ ...prev, [filterName]: value }));
+        // "all" is a special value from SelectItem to clear the filter.
+        setFilters(prev => ({ ...prev, [filterName]: value === 'all' ? '' : value }));
     };
 
     const clearFilters = () => {
@@ -154,7 +155,7 @@ export default function PlayersPage() {
                                 <Select value={filters.role} onValueChange={(value) => handleFilterChange('role', value)}>
                                     <SelectTrigger id="role-filter"><SelectValue placeholder="Filter by Role" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">All Roles</SelectItem>
+                                        <SelectItem value="all">All Roles</SelectItem>
                                         {ROLES.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
@@ -164,7 +165,7 @@ export default function PlayersPage() {
                                 <Select value={filters.playstyle} onValueChange={(value) => handleFilterChange('playstyle', value)}>
                                     <SelectTrigger id="playstyle-filter"><SelectValue placeholder="Filter by Playstyle" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">All Playstyles</SelectItem>
+                                        <SelectItem value="all">All Playstyles</SelectItem>
                                         {PLAYSTYLES.map(style => <SelectItem key={style} value={style}>{style}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
@@ -174,7 +175,7 @@ export default function PlayersPage() {
                                 <Select value={filters.device} onValueChange={(value) => handleFilterChange('device', value)}>
                                     <SelectTrigger id="device-filter"><SelectValue placeholder="Filter by Device" /></SelectTrigger>
                                     <SelectContent>
-                                         <SelectItem value="">All Devices</SelectItem>
+                                         <SelectItem value="all">All Devices</SelectItem>
                                         {DEVICES.map(device => <SelectItem key={device} value={device}>{device}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
@@ -211,5 +212,3 @@ export default function PlayersPage() {
         </div>
     );
 }
-
-    
