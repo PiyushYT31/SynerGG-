@@ -1,0 +1,397 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account in the application, distinguishing between player and organization managers. It links to either a PlayerProfile or an OrganizationProfile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "userType": {
+          "type": "string",
+          "description": "Indicates whether the user is an 'Org' manager or a 'Player'."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, primarily for communication.",
+          "format": "email"
+        },
+        "discordId": {
+          "type": "string",
+          "description": "The user's Discord ID, used for communication and linking accounts."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userType",
+        "email",
+        "discordId",
+        "createdAt"
+      ]
+    },
+    "PlayerProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PlayerProfile",
+      "type": "object",
+      "description": "Detailed profile information for a player, including their in-game stats, preferences, and gameplay highlights. This profile is linked to a User entity.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PlayerProfile entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the associated User entity. (Relationship: User 1:1 PlayerProfile)"
+        },
+        "ign": {
+          "type": "string",
+          "description": "Player's in-game name (IGN) in BGMI."
+        },
+        "role": {
+          "type": "string",
+          "description": "The player's primary role in-game (e.g., IGL, Entry Fragger, Support, Assaulter, Sniper)."
+        },
+        "experience": {
+          "type": "string",
+          "description": "Description of the player's gaming experience and background."
+        },
+        "fdRatio": {
+          "type": "number",
+          "description": "Player's current season F/D (Finish/Death) ratio."
+        },
+        "highlightsUrl": {
+          "type": "string",
+          "description": "URL to a YouTube or Drive link showcasing player's gameplay highlights (POV reel).",
+          "format": "uri"
+        },
+        "synergyNeeds": {
+          "type": "string",
+          "description": "A detailed description of the player's ideal teammates and desired playstyle for synergy matching (e.g., 'I need an IGL who plays center-zone')."
+        },
+        "playstyle": {
+          "type": "string",
+          "description": "The player's general playstyle (e.g., Aggressive, Tactical, Balanced, Passive)."
+        },
+        "device": {
+          "type": "string",
+          "description": "The mobile device operating system the player uses (e.g., iOS, Android)."
+        },
+        "achievements": {
+          "type": "array",
+          "description": "A list of notable achievements or accolades of the player.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the player profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the player profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "ign",
+        "role",
+        "experience",
+        "fdRatio",
+        "highlightsUrl",
+        "synergyNeeds",
+        "playstyle",
+        "device",
+        "createdAt"
+      ]
+    },
+    "OrganizationProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrganizationProfile",
+      "type": "object",
+      "description": "Detailed profile information for an organization or team, including branding, recruitment preferences, and verified status. This profile is linked to a User entity.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrganizationProfile entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the associated User entity. (Relationship: User 1:1 OrganizationProfile)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The official name of the organization or team."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL to the organization's logo image.",
+          "format": "uri"
+        },
+        "socialLinks": {
+          "type": "array",
+          "description": "An array of URLs to the organization's social media profiles.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "achievements": {
+          "type": "array",
+          "description": "A list of notable achievements or accolades of the organization.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "teamStyle": {
+          "type": "string",
+          "description": "A description of the organization's overall team playstyle and strategy (e.g., Edge-Player, Aggressive, Drop-Clashers)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A general description or mission statement of the organization."
+        },
+        "isVerified": {
+          "type": "boolean",
+          "description": "Indicates if the organization profile has been officially verified."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the organization profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the organization profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "logoUrl",
+        "teamStyle",
+        "description",
+        "isVerified",
+        "createdAt"
+      ]
+    },
+    "RosterSlot": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RosterSlot",
+      "type": "object",
+      "description": "Represents a single position or slot within an organization's 5-man roster, indicating its status and the player filling it if any.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the RosterSlot entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the OrganizationProfile this slot belongs to. (Relationship: OrganizationProfile 1:N RosterSlot)"
+        },
+        "slotName": {
+          "type": "string",
+          "description": "A descriptive name for the roster slot (e.g., 'IGL Slot', 'Entry Fragger 1')."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the roster slot ('Locked', 'Vacant', or 'Open for Replacement')."
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the PlayerProfile currently occupying this slot. Null if 'Vacant' or 'Open for Replacement'. (Relationship: RosterSlot 0:1 PlayerProfile)"
+        },
+        "requiredRole": {
+          "type": "string",
+          "description": "The primary role expected for a player filling this specific slot (e.g., IGL, Entry, Support)."
+        },
+        "requiredPlaystyle": {
+          "type": "string",
+          "description": "The desired playstyle for a player filling this slot (e.g., Aggressive, Tactical, Balanced)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the roster slot was created/defined.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the roster slot was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "slotName",
+        "status",
+        "requiredRole",
+        "requiredPlaystyle",
+        "createdAt"
+      ]
+    },
+    "TryoutRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TryoutRequest",
+      "type": "object",
+      "description": "Represents a formal request from an organization to a player for a tryout, or a player's application to an organization, facilitating the matchmaking process.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TryoutRequest entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the OrganizationProfile sending or receiving the request. (Relationship: OrganizationProfile 1:N TryoutRequest)"
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the PlayerProfile sending or receiving the request. (Relationship: PlayerProfile 1:N TryoutRequest)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the tryout request ('Pending', 'Accepted', 'Declined', 'Withdrawn')."
+        },
+        "message": {
+          "type": "string",
+          "description": "An optional message included with the tryout request or application."
+        },
+        "sentBy": {
+          "type": "string",
+          "description": "Indicates whether the request was sent by 'Org' or 'Player'."
+        },
+        "sentAt": {
+          "type": "string",
+          "description": "Timestamp when the tryout request was sent.",
+          "format": "date-time"
+        },
+        "respondedAt": {
+          "type": "string",
+          "description": "Timestamp when the tryout request was responded to (accepted/declined).",
+          "format": "date-time"
+        },
+        "synergyScore": {
+          "type": "number",
+          "description": "The calculated synergy match score between the player and organization at the time the request was made."
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "playerId",
+        "status",
+        "sentBy",
+        "sentAt",
+        "synergyScore"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores core user authentication information and user type (Org or Player). This collection is private, with read/write access restricted to the authenticated user matching the document's userId.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to Firebase Authentication's UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/player_profiles/{playerProfileId}",
+        "definition": {
+          "entityName": "PlayerProfile",
+          "schema": {
+            "$ref": "#/backend/entities/PlayerProfile"
+          },
+          "description": "Contains detailed profile information for a player. This collection is publicly readable for discovery by organizations but writable only by the owning user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "playerProfileId",
+              "description": "The unique identifier for the player's profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organization_profiles/{organizationProfileId}",
+        "definition": {
+          "entityName": "OrganizationProfile",
+          "schema": {
+            "$ref": "#/backend/entities/OrganizationProfile"
+          },
+          "description": "Contains detailed profile information for an organization. This collection is publicly readable for discovery by players but writable only by the owning organization manager. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationProfileId",
+              "description": "The unique identifier for the organization's profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roster_slots/{rosterSlotId}",
+        "definition": {
+          "entityName": "RosterSlot",
+          "schema": {
+            "$ref": "#/backend/entities/RosterSlot"
+          },
+          "description": "Represents a slot within an organization's 5-man roster. Writable only by the organization manager. Includes denormalized 'organizationManagerUserId' (the userId of the Org's manager) for authorization independence.",
+          "params": [
+            {
+              "name": "rosterSlotId",
+              "description": "The unique identifier for a specific roster slot."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/tryout_requests/{tryoutRequestId}",
+        "definition": {
+          "entityName": "TryoutRequest",
+          "schema": {
+            "$ref": "#/backend/entities/TryoutRequest"
+          },
+          "description": "Manages tryout requests between players and organizations. Writable only by the involved player or organization manager. Includes denormalized 'playerUserId' and 'organizationManagerUserId' for authorization independence.",
+          "params": [
+            {
+              "name": "tryoutRequestId",
+              "description": "The unique identifier for a specific tryout request."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore structure prioritizes security, scalability, and debuggability by adhering to the core design principles, especially Authorization Independence and Structural Segregation. Each entity is placed in its own top-level collection, ensuring homogeneous security postures within collections and simplifying security rules.\n\n**Authorization Independence:** This is achieved through strategic denormalization. For documents whose access depends on a 'parent' or related entity's owner, the owner's `userId` is explicitly copied into the document. For instance:\n*   `PlayerProfile` documents will include the `userId` of the owning `User`.\n*   `OrganizationProfile` documents will include the `userId` of the owning `User`.\n*   `RosterSlot` documents, which are owned by an organization, will denormalize the `userId` of the `OrganizationProfile`'s manager (renamed to `organizationManagerUserId` for clarity) directly into the `RosterSlot` document. This allows rules to check `request.auth.uid == resource.data.organizationManagerUserId` without needing to perform a `get()` operation on the parent `OrganizationProfile` document.\n*   `TryoutRequest` documents involve both a player and an organization. To allow both parties to manage the request independently, both the `userId` of the player (`playerUserId`) and the `userId` of the organization's manager (`organizationManagerUserId`) are denormalized into each `TryoutRequest` document. This eliminates complex `get()` calls and facilitates atomic updates.\n\n**Support for Query-Aware Permissions (QAPs):** The structural segregation inherently supports QAPs by separating data with different access requirements:\n*   `/player_profiles` and `/organization_profiles` collections are designed to be globally readable (for discovery by organizations and players, respectively) but write-restricted to their respective owners. This allows efficient `list` operations (e.g., 'show all players an Org can recruit', 'show all Orgs a player can apply to') without needing complex rule-based filtering, as the read permission is broad and the write permission is specific.\n*   `/roster_slots` and `/tryout_requests` collections contain data that is private to the involved parties. By denormalizing the owner `userId`s, `list` operations on these collections can efficiently filter by `userId` (e.g., `db.collection('roster_slots').where('organizationManagerUserId', '==', currentUser.uid)`) and security rules can strictly enforce that only the `currentUser.uid` can access their specific documents.\n\nThis design minimizes rule complexity, prevents waterfall `get()` operations, and ensures that data integrity and security are maintained efficiently across all read and write operations."
+  }
+}

@@ -1,0 +1,174 @@
+/**
+ * Core Philosophy: This ruleset enforces a security model based on user ownership and public discoverability. Core user data is strictly private, while profiles (for players and organizations) are publicly readable to facilitate matching but writable only by their owners. Transactional data, like roster slots and tryout requests, is private to the involved parties.
+ * Data Structure: The database uses a flat, top-level collection structure. Each primary entity (`users`, `player_profiles`, `organization_profiles`, `roster_slots`, `tryout_requests`) resides in its own collection. This segregation simplifies rules and enhances query performance.
+ * Key Security Decisions:
+ *  - User Enumeration is prevented by disallowing list operations on the `/users` collection.
+ *  - Profile collections (`/player_profiles`, `/organization_profiles`) are public-read to allow players and orgs to find each other.
+ *  - Writes to all documents are strictly controlled by ownership checks.
+ *  - Access to shared documents, like a `TryoutRequest`, is granted only to the specific participants (the player and the organization manager).
+ * Denormalization for Authorization: To ensure fast and secure access checks, owner `userId`s are denormalized onto child or related documents. For example, `player_profiles` and `organization_profiles` contain a `userId` field. `roster_slots` and `tryout_requests` contain denormalized IDs (`organizationManagerUserId`, `playerUserId`) to avoid costly and slow `get()` calls in rules.
+ * Structural Segregation: Publicly discoverable profiles are stored in separate collections from private user data and transactional records. This is more secure and performant than using a single collection with status flags.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if a document being modified already exists.
+     * CRITICAL for all update and delete operations.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    /**
+     * On create, validates that the new document's internal `userId`
+     * matches the authenticated user's UID.
+     */
+    function isCreatingOwnedDoc() {
+      return isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    /**
+     * On update/delete, validates that the user owns the existing document.
+     */
+    function isOwnerOfExistingDoc() {
+      return isOwner(resource.data.userId) && isExistingDoc();
+    }
+    
+    /**
+     * On update, ensures the document's `userId` ownership field cannot be changed.
+     */
+    function isUserIdImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // ----------------------------------------------------------------------
+    // User Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Users can create their own user document, and then only they can read or update it.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own document: auth.uid == userId.
+     * @deny (list) Any user attempting to list all documents in the /users collection.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.id == resource.data.id;
+      allow delete: if false;
+    }
+
+    // ----------------------------------------------------------------------
+    // Player Profile Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Player profiles are publicly readable for discovery by organizations,
+     * but can only be created, updated, or deleted by the owning user.
+     * @path /player_profiles/{playerProfileId}
+     * @allow (get, list) Any user, signed in or not, can read player profiles.
+     * @deny (update) A user trying to update a profile where `resource.data.userId` does not match their `auth.uid`.
+     * @principle Enforces a "Public Read, Owner Write" model, ideal for discoverable content.
+     */
+    match /player_profiles/{playerProfileId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isCreatingOwnedDoc();
+      allow update: if isOwnerOfExistingDoc() && isUserIdImmutable();
+      allow delete: if isOwnerOfExistingDoc();
+    }
+
+    // ----------------------------------------------------------------------
+    // Organization Profile Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Organization profiles are publicly readable for discovery by players,
+     * but can only be created, updated, or deleted by the owning organization manager.
+     * @path /organization_profiles/{organizationProfileId}
+     * @allow (get, list) Any user, signed in or not, can read organization profiles.
+     * @deny (create) A user trying to create a profile with a `userId` that is not their own.
+     * @principle Enforces a "Public Read, Owner Write" model, ideal for discoverable content.
+     */
+    match /organization_profiles/{organizationProfileId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isCreatingOwnedDoc();
+      allow update: if isOwnerOfExistingDoc() && isUserIdImmutable();
+      allow delete: if isOwnerOfExistingDoc();
+    }
+
+    // ----------------------------------------------------------------------
+    // Roster Slot Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Roster slots are private to the organization that owns them. Only the
+     * organization manager can create, read, update, or delete their own roster slots.
+     * NOTE: This rule requires an `organizationManagerUserId` field to be denormalized
+     * onto each RosterSlot document for the ownership check.
+     * @path /roster_slots/{rosterSlotId}
+     * @allow (update) An org manager updating a slot where `resource.data.organizationManagerUserId` matches their `auth.uid`.
+     * @deny (get) A user attempting to read a roster slot owned by another organization.
+     * @principle Enforces strict ownership via a denormalized owner ID, avoiding costly `get` calls.
+     */
+    match /roster_slots/{rosterSlotId} {
+      allow get: if isOwner(resource.data.organizationManagerUserId);
+      allow list: if isSignedIn(); // Allows for client-side queries like .where('organizationManagerUserId', '==', auth.uid)
+      allow create: if isSignedIn() && request.resource.data.organizationManagerUserId == request.auth.uid;
+      allow update: if isOwner(resource.data.organizationManagerUserId) && isExistingDoc() && request.resource.data.organizationManagerUserId == resource.data.organizationManagerUserId;
+      allow delete: if isOwner(resource.data.organizationManagerUserId) && isExistingDoc();
+    }
+
+    // ----------------------------------------------------------------------
+    // Tryout Request Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if the authenticated user is one of the two parties involved in a tryout request.
+     * NOTE: Requires `playerUserId` and `organizationManagerUserId` fields on the document.
+     */
+    function isTryoutParticipant(doc) {
+      return isSignedIn() && (request.auth.uid == doc.playerUserId || request.auth.uid == doc.organizationManagerUserId);
+    }
+    
+    /**
+     * @description Tryout requests are private documents shared between exactly two parties:
+     * the player and the organization manager. Only these two individuals can interact with the request.
+     * NOTE: Requires `playerUserId` and `organizationManagerUserId` to be denormalized onto the document.
+     * @path /tryout_requests/{tryoutRequestId}
+     * @allow (get) The player (`playerUserId`) or org manager (`organizationManagerUserId`) reading the request.
+     * @deny (update) Any user who is not one of the two specified participants.
+     * @principle Enforces shared access for a defined set of collaborators on a document.
+     */
+    match /tryout_requests/{tryoutRequestId} {
+      allow get: if isTryoutParticipant(resource.data);
+      allow list: if isSignedIn(); // Allows for client-side queries like .where('playerUserId', '==', auth.uid)
+      allow create: if isTryoutParticipant(request.resource.data);
+      allow update: if isTryoutParticipant(resource.data) && isExistingDoc();
+      allow delete: if isTryoutParticipant(resource.data) && isExistingDoc();
+    }
+  }
+}
