@@ -32,17 +32,20 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex h-[80vh] min-h-[600px] w-full flex-col items-center justify-center text-center text-primary-foreground">
+        <section className="relative flex h-[80vh] min-h-[600px] w-full flex-col items-center justify-center text-center">
           <Image
             src={placeholderImages.home_hero.src}
-            alt="Esports Arena"
+            alt="BGMI Esports Character"
             data-ai-hint={placeholderImages.home_hero.hint}
             fill
-            className="object-cover -z-10"
+            className="object-cover -z-10 brightness-[.4]"
           />
-          <div className="absolute inset-0 bg-black/60 -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent -z-10" />
           <div className="container px-4 md:px-6">
-            <h1 className="text-5xl font-extrabold tracking-tight font-headline sm:text-6xl md:text-7xl">
+            <h1 
+              className="text-6xl font-extrabold tracking-tighter font-headline sm:text-7xl md:text-8xl text-neutral-50"
+              style={{ textShadow: '0 5px 20px hsl(var(--primary) / 0.5), 0 2px 4px hsl(var(--primary) / 0.3)'}}
+            >
               The Transfer Window is Open
             </h1>
             <p className="mx-auto mt-6 max-w-3xl text-lg text-primary-foreground/80 md:text-xl">
@@ -114,7 +117,7 @@ export default function LandingPage() {
         </section>
 
         {/* Organization Logos Section */}
-        <section className="w-full py-20 md:py-32 bg-accent">
+        <section className="w-full py-20 md:py-32 bg-accent/30">
             <div className="container mx-auto px-4 md:px-6">
                  <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Trusted by Leading Organizations</h2>
@@ -131,18 +134,21 @@ export default function LandingPage() {
                 >
                   <CarouselContent>
                     {placeholderImages.org_logos.map((logo) => (
-                      <CarouselItem key={logo.id} className="basis-1/3 md:basis-1/4 lg:basis-1/6">
+                      <CarouselItem key={logo.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/6">
                         <div className="p-1">
-                           <div className="flex aspect-video items-center justify-center p-4 bg-background/50 rounded-lg">
+                          <div className="rounded-lg bg-card/80 p-2 group transition-all hover:bg-accent/50 hover:scale-105">
+                            <p className="text-center text-xs font-bold text-muted-foreground truncate mb-2 group-hover:text-foreground h-4 flex items-center justify-center">{logo.name}</p>
+                            <div className="flex aspect-video items-center justify-center rounded-md p-2 ">
                               <Image
                                 src={logo.src}
-                                alt={logo.hint}
+                                alt={logo.name}
                                 data-ai-hint={logo.hint}
                                 width={140}
                                 height={70}
-                                className="grayscale transition-all hover:grayscale-0"
+                                className="object-contain"
                               />
-                           </div>
+                            </div>
+                          </div>
                         </div>
                       </CarouselItem>
                     ))}

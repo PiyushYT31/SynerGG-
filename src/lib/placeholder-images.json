@@ -1,48 +1,104 @@
 {
   "home_hero": {
-    "src": "https://picsum.photos/seed/hero/1920/1080",
-    "hint": "esports arena"
+    "src": "https://picsum.photos/seed/bgmi-character/1920/1080",
+    "hint": "esports character"
   },
   "org_logos": [
     {
       "id": "org1",
-      "src": "https://picsum.photos/seed/org1/200/100",
-      "hint": "gaming logo"
+      "name": "iQOO SOUL",
+      "src": "https://picsum.photos/seed/iqoo-soul/200/100",
+      "hint": "esports logo"
     },
     {
       "id": "org2",
-      "src": "https://picsum.photos/seed/org2/200/100",
-      "hint": "team logo"
+      "name": "iQOO ORANGUTAN",
+      "src": "https://picsum.photos/seed/iqoo-orangutan/200/100",
+      "hint": "esports logo"
     },
     {
       "id": "org3",
-      "src": "https://picsum.photos/seed/org3/200/100",
+      "name": "GENESIS ESPORTS",
+      "src": "https://picsum.photos/seed/genesis-esports/200/100",
       "hint": "esports logo"
     },
     {
       "id": "org4",
-      "src": "https://picsum.photos/seed/org4/200/100",
-      "hint": "gaming emblem"
+      "name": "Learn from Past",
+      "src": "https://picsum.photos/seed/lfp/200/100",
+      "hint": "esports logo"
     },
     {
       "id": "org5",
-      "src": "https://picsum.photos/seed/org5/200/100",
-      "hint": "team emblem"
+      "name": "iQOO RECKONING ESPORTS",
+      "src": "https://picsum.photos/seed/iqoo-reckoning/200/100",
+      "hint": "esports logo"
     },
     {
       "id": "org6",
-      "src": "https://picsum.photos/seed/org6/200/100",
-      "hint": "squad logo"
+      "name": "iQOO Revenant Xspark",
+      "src": "https://picsum.photos/seed/iqoo-revenant/200/100",
+      "hint": "esports logo"
     },
     {
       "id": "org7",
-      "src": "https://picsum.photos/seed/org7/200/100",
-      "hint": "gaming clan"
+      "name": "Victores Sumus",
+      "src": "https://picsum.photos/seed/victores-sumus/200/100",
+      "hint": "esports logo"
     },
     {
       "id": "org8",
-      "src": "https://picsum.photos/seed/org8/200/100",
-      "hint": "esports team"
+      "name": "Meta Ninza",
+      "src": "https://picsum.photos/seed/meta-ninza/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org9",
+      "name": "Hero Xtreme Godlike",
+      "src": "https://picsum.photos/seed/godlike/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org10",
+      "name": "WELT E-SPORTS",
+      "src": "https://picsum.photos/seed/welt-esports/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org11",
+      "name": "Nebula Esports",
+      "src": "https://picsum.photos/seed/nebula-esports/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org12",
+      "name": "MYTH OFFICIAL",
+      "src": "https://picsum.photos/seed/myth-official/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org13",
+      "name": "Wyld Fangs",
+      "src": "https://picsum.photos/seed/wyld-fangs/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org14",
+      "name": "K9 Esports",
+      "src": "https://picsum.photos/seed/k9-esports/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org15",
+      "name": "iQOO Team Tamilas",
+      "src": "https://picsum.photos/seed/iqoo-tamilas/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org16",
+      "name": "Vasista Esports",
+      "src": "https://picsum.photos/seed/vasista-esports/200/100",
+      "hint": "esports logo"
     }
   ]
 }
