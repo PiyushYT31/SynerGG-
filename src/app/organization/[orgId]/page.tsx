@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus } from 'lucide-react';
+import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -232,8 +232,8 @@ export default function OrganizationProfilePage() {
                     <div className="flex items-center gap-4">
                         {isOwner && (
                             <Button asChild>
-                                <Link href={`/organization/${orgId}/edit`}>
-                                    <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                                <Link href={`/organization/${orgId}/dashboard/roster`}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Dashboard
                                 </Link>
                             </Button>
                         )}
@@ -339,5 +339,3 @@ export default function OrganizationProfilePage() {
         </div>
     );
 }
-
-    
