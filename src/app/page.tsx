@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function LandingPage() {
   return (
@@ -31,10 +32,12 @@ export default function LandingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">
-                  Organization Login / Sign Up
-                  <ArrowRight className="ml-2" />
-                </Button>
+                <Link href="/organization/signup" className="w-full">
+                  <Button className="w-full">
+                    Organization Login / Sign Up
+                    <ArrowRight className="ml-2" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -46,10 +49,12 @@ export default function LandingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">
-                  Player Login / Sign Up
-                  <ArrowRight className="ml-2" />
-                </Button>
+                <Link href="/player/signup" className="w-full">
+                  <Button className="w-full">
+                    Player Login / Sign Up
+                    <ArrowRight className="ml-2" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
