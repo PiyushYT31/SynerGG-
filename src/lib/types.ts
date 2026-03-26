@@ -1,17 +1,22 @@
 export interface PlayerProfile {
   id: string;
   userId: string;
+  playerName: string;
+  email: string;
+  phoneNumber: string;
   ign: string;
+  bgmiUid: string;
   role: string;
   experience: string;
   fdRatio: number;
   highlightsUrl: string;
-  synergyNeeds: string;
+  idealTeammateStrategy: string;
   playstyle: string;
   device: string;
   achievements: string[];
   createdAt: string;
   updatedAt: string;
+  profilePictureUrl?: string;
 }
 
 export interface OrganizationProfile {

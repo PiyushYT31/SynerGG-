@@ -11,23 +11,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
-    'IGL': <BrainCircuit className="h-5 w-5" />,
-    'Entry Fragger': <Swords className="h-5 w-5" />,
-    'Support': <Heart className="h-5 w-5" />,
-    'Assaulter': <Target className="h-5 w-5" />,
-    'Sniper': <Crosshair className="h-5 w-5" />,
+    'IGL': <BrainCircuit className="h-4 w-4" />,
+    'Entry Fragger': <Swords className="h-4 w-4" />,
+    'Support': <Heart className="h-4 w-4" />,
+    'Assaulter': <Target className="h-4 w-4" />,
+    'Sniper': <Crosshair className="h-4 w-4" />,
 };
 
 function getYouTubeThumbnail(url: string) {
     if (!url) return null;
-    const videoId = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return videoId ? `https://i.ytimg.com/vi/${videoId[1]}/hqdefault.jpg` : null;
+    const videoIdMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (videoIdMatch) return `https://i.ytimg.com/vi/${videoIdMatch[1]}/hqdefault.jpg`;
+    
+    // Simple check for Google Drive link
+    if (url.includes('drive.google.com')) {
+        // We can't generate a thumbnail, so we'll use a generic icon
+        return '/gdrive.png'; // You'd need to add a generic Drive icon to your public folder
+    }
+    return null;
 }
+
 
 function ProfileSkeleton() {
     return (
@@ -106,21 +114,23 @@ export default function PlayerProfilePage() {
             <div className="p-6">
                 <div className="flex flex-col sm:flex-row items-start gap-6">
                     <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+                        <AvatarImage src={profile.profilePictureUrl} alt={profile.ign} />
                         <AvatarFallback>{profile.ign.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow pt-2">
-                        <CardTitle className="font-headline text-3xl">{profile.ign}</CardTitle>
+                        <CardTitle className="font-headline text-4xl">{profile.ign}</CardTitle>
+                        <CardDescription className="text-xl text-muted-foreground">{profile.playerName}</CardDescription>
                         <div className="flex flex-wrap gap-2 mt-4 text-sm">
-                            <Badge variant="default" className="gap-2 text-base py-1 px-3">
+                           <Badge variant="default" className="gap-2 text-base py-1 px-3">
                                 {roleIcons[profile.role]}
                                 {profile.role}
                             </Badge>
                              <Badge variant="secondary" className="gap-2 text-base py-1 px-3">
-                                <Scale />
+                                <Scale className="h-4 w-4" />
                                 {profile.playstyle}
                             </Badge>
                             <Badge variant="secondary" className="gap-2 text-base py-1 px-3">
-                                <Smartphone />
+                                <Smartphone className="h-4 w-4" />
                                 {profile.device}
                             </Badge>
                         </div>
@@ -136,34 +146,61 @@ export default function PlayerProfilePage() {
                 </div>
 
                 <div className="mt-8 grid md:grid-cols-3 gap-6">
-                    <Card className="md:col-span-2">
-                        <CardHeader><CardTitle className="font-headline">Competitive Experience</CardTitle></CardHeader>
-                        <CardContent><p className="text-muted-foreground">{profile.experience}</p></CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader><CardTitle className="font-headline">Synergy Needs</CardTitle></CardHeader>
-                        <CardContent><p className="text-muted-foreground">{profile.synergyNeeds}</p></CardContent>
-                    </Card>
-                </div>
-                
-                {thumbnail && (
-                    <div className="mt-6">
+                    <div className="md:col-span-2 space-y-6">
+                        <Card>
+                            <CardHeader><CardTitle className="font-headline flex items-center gap-2"><FileText /> Experience</CardTitle></CardHeader>
+                            <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{profile.experience}</p></CardContent>
+                        </Card>
                          <Card>
-                            <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Youtube className="text-red-500" /> Gameplay Highlights</CardTitle></CardHeader>
-                            <CardContent>
-                                <Link href={profile.highlightsUrl} target="_blank" rel="noopener noreferrer">
-                                <Image
-                                    src={thumbnail}
-                                    alt="Gameplay highlights thumbnail"
-                                    width={1280}
-                                    height={720}
-                                    className="rounded-lg border-2 border-transparent hover:border-primary transition-all cursor-pointer"
-                                />
-                                </Link>
+                            <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Users /> Ideal Teammates & Strategy</CardTitle></CardHeader>
+                            <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{profile.idealTeammateStrategy}</p></CardContent>
+                        </Card>
+                        {thumbnail && (
+                            <Card>
+                                <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Youtube className="text-red-500" /> Gameplay Highlights</CardTitle></CardHeader>
+                                <CardContent>
+                                    <Link href={profile.highlightsUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video">
+                                    <Image
+                                        src={thumbnail}
+                                        alt="Gameplay highlights"
+                                        layout="fill"
+                                        objectFit="cover"
+                                        className="rounded-lg border-2 border-transparent hover:border-primary transition-all cursor-pointer"
+                                    />
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
+                    <div className="space-y-6">
+                        <Card>
+                           <CardHeader><CardTitle className="font-headline">Player Details</CardTitle></CardHeader>
+                           <CardContent className="space-y-4">
+                               <div className="flex items-center gap-3">
+                                   <Gamepad2 className="h-5 w-5 text-muted-foreground" />
+                                   <span>{profile.ign} (IGN)</span>
+                               </div>
+                                <div className="flex items-center gap-3">
+                                   <Fingerprint className="h-5 w-5 text-muted-foreground" />
+                                   <span>{profile.bgmiUid} (UID)</span>
+                               </div>
+                           </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader><CardTitle className="font-headline">Contact</CardTitle></CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <Mail className="h-5 w-5 text-muted-foreground" />
+                                    <span>{profile.email}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Phone className="h-5 w-5 text-muted-foreground" />
+                                    <span>{profile.phoneNumber}</span>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
-                )}
+                </div>
             </div>
         </Card>
       </main>

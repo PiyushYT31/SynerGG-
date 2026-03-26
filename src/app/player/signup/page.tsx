@@ -28,17 +28,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
-  ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
+  playerName: z.string().min(2, { message: 'Player name must be at least 2 characters.' }),
   email: z.string().email(),
+  phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number.' }),
+  ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
+  bgmiUid: z.string().min(5, { message: 'Please enter a valid BGMI UID.' }),
+  role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper']),
+  playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
+  fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
+  device: z.enum(['iOS', 'Android']),
+  highlightsUrl: z.string().url({ message: 'Please enter a valid Google Drive or YouTube URL.' }),
+  experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
+  idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
-  role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper']),
-  device: z.enum(['iOS', 'Android']),
-  fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
-  playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
-  highlightsUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional(),
-  experience: z.string().min(20, { message: 'Please provide more details about your experience.' }),
-  synergyNeeds: z.string().min(20, { message: 'Please describe your ideal team synergy.' }),
 }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
@@ -52,13 +55,14 @@ export default function PlayerSignUp() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ign: '',
+      playerName: '',
       email: '',
-      password: '',
-      confirmPassword: '',
+      phoneNumber: '',
+      ign: '',
+      bgmiUid: '',
       highlightsUrl: '',
       experience: '',
-      synergyNeeds: '',
+      idealTeammateStrategy: '',
     },
   });
 
@@ -80,16 +84,20 @@ export default function PlayerSignUp() {
         
         const playerProfileData = {
             userId: user.uid,
-            ign: values.ign,
+            playerName: values.playerName,
             email: values.email,
+            phoneNumber: values.phoneNumber,
+            ign: values.ign,
+            bgmiUid: values.bgmiUid,
             role: values.role,
             device: values.device,
             fdRatio: values.fdRatio,
             playstyle: values.playstyle,
-            highlightsUrl: values.highlightsUrl || '',
+            highlightsUrl: values.highlightsUrl,
             experience: values.experience,
-            synergyNeeds: values.synergyNeeds,
+            idealTeammateStrategy: values.idealTeammateStrategy,
             achievements: [],
+            profilePictureUrl: '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
@@ -140,13 +148,11 @@ export default function PlayerSignUp() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                                 <FormField
                                     control={form.control}
-                                    name="ign"
+                                    name="playerName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>In-Game Name (IGN)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Your BGMI username" {...field} />
-                                            </FormControl>
+                                            <FormLabel>Player Name</FormLabel>
+                                            <FormControl><Input placeholder="e.g. John Doe" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -157,49 +163,52 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Email</FormLabel>
-                                            <FormControl>
-                                                <Input type="email" placeholder="you@example.com" {...field} />
-                                            </FormControl>
+                                            <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="password"
+                                    name="phoneNumber"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Password</FormLabel>
-                                            <FormControl>
-                                                <Input type="password" placeholder="••••••••" {...field} />
-                                            </FormControl>
+                                            <FormLabel>Phone Number</FormLabel>
+                                            <FormControl><Input placeholder="+91 1234567890" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="confirmPassword"
+                                    name="ign"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Confirm Password</FormLabel>
-                                            <FormControl>
-                                                <Input type="password" placeholder="••••••••" {...field} />
-                                            </FormControl>
+                                            <FormLabel>In-Game Name (IGN)</FormLabel>
+                                            <FormControl><Input placeholder="Your BGMI username" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                                 <FormField
+                                    control={form.control}
+                                    name="bgmiUid"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>BGMI User ID (UID)</FormLabel>
+                                            <FormControl><Input placeholder="5123456789" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                 <FormField
                                     control={form.control}
                                     name="role"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Primary Role</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger><SelectValue placeholder="Select your main role" /></SelectTrigger>
-                                                </FormControl>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select your main role" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="IGL">IGL (In-Game Leader)</SelectItem>
                                                     <SelectItem value="Entry Fragger">Entry Fragger</SelectItem>
@@ -219,9 +228,7 @@ export default function PlayerSignUp() {
                                         <FormItem>
                                             <FormLabel>Playstyle</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger><SelectValue placeholder="Select your playstyle" /></SelectTrigger>
-                                                </FormControl>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select your playstyle" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="Aggressive">Aggressive</SelectItem>
                                                     <SelectItem value="Tactical">Tactical</SelectItem>
@@ -239,9 +246,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>F/D Ratio</FormLabel>
-                                            <FormControl>
-                                                <Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} />
-                                            </FormControl>
+                                            <FormControl><Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -253,9 +258,7 @@ export default function PlayerSignUp() {
                                         <FormItem>
                                             <FormLabel>Device</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger><SelectValue placeholder="Select your device OS" /></SelectTrigger>
-                                                </FormControl>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select your device OS" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="iOS">iOS</SelectItem>
                                                     <SelectItem value="Android">Android</SelectItem>
@@ -271,10 +274,8 @@ export default function PlayerSignUp() {
                                     name="highlightsUrl"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Highlights URL (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="https://youtube.com/..." {...field} />
-                                            </FormControl>
+                                            <FormLabel>Highlights URL</FormLabel>
+                                            <FormControl><Input placeholder="https://youtube.com/..." {...field} /></FormControl>
                                             <FormDescription>Link to your YouTube or Google Drive gameplay reel.</FormDescription>
                                             <FormMessage />
                                         </FormItem>
@@ -288,9 +289,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Experience</FormLabel>
-                                            <FormControl>
-                                                <Textarea placeholder="Describe your competitive experience, past teams, etc." {...field} />
-                                            </FormControl>
+                                            <FormControl><Textarea placeholder="Describe your competitive experience, past teams, etc." {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -299,19 +298,39 @@ export default function PlayerSignUp() {
                                 <div className="md:col-span-2">
                                 <FormField
                                     control={form.control}
-                                    name="synergyNeeds"
+                                    name="idealTeammateStrategy"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Ideal Teammates / Synergy</FormLabel>
-                                            <FormControl>
-                                                <Textarea placeholder="What kind of players do you work best with? (e.g., 'I need a calm IGL who makes decisive calls')" {...field} />
-                                            </FormControl>
+                                            <FormLabel>Ideal Teammates & Strategy</FormLabel>
+                                            <FormControl><Textarea placeholder="What kind of players do you work best with? (e.g., 'I need a calm IGL who makes decisive calls')" {...field} /></FormControl>
                                              <FormDescription>This helps us find the best team for you.</FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                                 </div>
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Password</FormLabel>
+                                            <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Confirm Password</FormLabel>
+                                            <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
                             <Button type="submit" className="w-full">Create Player Profile</Button>
                         </form>
