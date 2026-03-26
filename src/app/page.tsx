@@ -136,18 +136,15 @@ export default function LandingPage() {
                     {placeholderImages.org_logos.map((logo) => (
                       <CarouselItem key={logo.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                         <div className="p-2">
-                          <div className="rounded-lg bg-card/60 p-4 transition-all hover:bg-accent/50 hover:scale-105 h-40 flex flex-col justify-between">
-                            <p className="text-center text-sm font-bold text-muted-foreground truncate">{logo.name}</p>
-                            <div className="flex-grow flex items-center justify-center">
-                              <Image
-                                src={logo.src}
-                                alt={logo.name}
-                                data-ai-hint={logo.hint}
-                                width={140}
-                                height={70}
-                                className="object-contain"
-                              />
-                            </div>
+                          <div className="rounded-lg bg-card/30 p-6 flex items-center justify-center h-28 transition-all hover:bg-accent/50 hover:scale-105">
+                            <Image
+                              src={logo.src}
+                              alt={logo.name}
+                              data-ai-hint={logo.hint}
+                              width={150}
+                              height={75}
+                              className="object-contain"
+                            />
                           </div>
                         </div>
                       </CarouselItem>

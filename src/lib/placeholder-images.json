@@ -99,6 +99,30 @@
       "name": "Chemin Esports",
       "src": "https://picsum.photos/seed/chemin-esports/200/100",
       "hint": "esports logo chemical"
+    },
+    {
+      "id": "org17",
+      "name": "Carnival Gaming",
+      "src": "https://picsum.photos/seed/carnival-gaming/200/100",
+      "hint": "esports logo minimal"
+    },
+    {
+      "id": "org18",
+      "name": "Hydra Esports",
+      "src": "https://picsum.photos/seed/hydra-esports/200/100",
+      "hint": "esports logo animal snake"
+    },
+    {
+      "id": "org19",
+      "name": "FS Esports",
+      "src": "https://picsum.photos/seed/fs-esports/200/100",
+      "hint": "esports logo text"
+    },
+    {
+      "id": "org20",
+      "name": "Team Godspeed",
+      "src": "https://picsum.photos/seed/team-godspeed/200/100",
+      "hint": "esports logo minimal"
     }
   ]
 }
