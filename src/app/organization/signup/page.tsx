@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +22,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
 import { ArrowLeft } from 'lucide-react';
+import { useFirebase } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   organizationName: z.string().min(2, {
@@ -27,6 +32,8 @@ const formSchema = z.object({
   email: z.string().email({
     message: 'Please enter a valid email address.',
   }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  confirmPassword: z.string(),
   phoneNumber: z.string().optional(),
   logo: z.string().url({ message: 'Please enter a valid logo URL.' }).optional(),
   owner: z.string().min(2, {
@@ -35,14 +42,24 @@ const formSchema = z.object({
   coOwner: z.string().optional(),
   coach: z.string().optional(),
   analyst: z.string().optional(),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
 });
 
+
 export default function OrganizationSignUp() {
+  const { auth, firestore } = useFirebase();
+  const router = useRouter();
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       organizationName: '',
       email: '',
+      password: '',
+      confirmPassword: '',
       phoneNumber: '',
       logo: '',
       owner: '',
@@ -52,10 +69,53 @@ export default function OrganizationSignUp() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!auth || !firestore) {
+        toast({
+            variant: 'destructive',
+            title: 'Firebase not initialized',
+            description: 'Please try again later.',
+        });
+        return;
+    }
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+
+        const orgCollection = collection(firestore, 'organization_profiles');
+        
+        const orgProfileData = {
+            userId: user.uid,
+            name: values.organizationName,
+            email: values.email,
+            phoneNumber: values.phoneNumber || '',
+            logoUrl: values.logo || '',
+            owner: values.owner,
+            coOwner: values.coOwner || '',
+            coach: values.coach || '',
+            analyst: values.analyst || '',
+            isVerified: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        const docRef = await addDoc(orgCollection, orgProfileData);
+
+        toast({
+            title: "Profile Created!",
+            description: "Your organization profile has been created successfully.",
+        });
+
+        router.push(`/organization/${docRef.id}`);
+
+    } catch (error: any) {
+        console.error('Error signing up:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: error.message || 'There was a problem with your request.',
+        });
+    }
   }
 
   return (
@@ -103,7 +163,33 @@ export default function OrganizationSignUp() {
                                         <FormItem>
                                             <FormLabel>Contact Email</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="contact@example.com" {...field} />
+                                                <Input type="email" placeholder="contact@example.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                 <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Password</FormLabel>
+                                            <FormControl>
+                                                <Input type="password" placeholder="••••••••" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Confirm Password</FormLabel>
+                                            <FormControl>
+                                                <Input type="password" placeholder="••••••••" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
