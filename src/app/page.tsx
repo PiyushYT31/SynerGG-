@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -22,11 +23,18 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <Logo />
-          <Button variant="ghost" asChild>
-            <Link href="#login">
-              Login <LogIn className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+             <Button variant="ghost" asChild>
+                <Link href="/players">
+                  Players
+                </Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/organizations">
+                  Organizations
+                </Link>
+              </Button>
+          </div>
         </div>
       </header>
 
@@ -40,11 +48,11 @@ export default function LandingPage() {
             fill
             className="object-cover -z-10 brightness-[.4]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent -z-10" />
           <div className="container px-4 md:px-6">
             <h1 
               className="text-6xl font-extrabold tracking-tighter font-headline sm:text-7xl md:text-8xl text-neutral-50"
-              style={{ textShadow: '0 5px 20px hsl(var(--primary) / 0.5), 0 2px 4px hsl(var(--primary) / 0.3)'}}
+              style={{ textShadow: '0 5px 25px hsl(var(--primary) / 0.5), 0 2px 5px hsl(var(--primary) / 0.3)'}}
             >
               The Transfer Window is Open
             </h1>
@@ -117,7 +125,7 @@ export default function LandingPage() {
         </section>
 
         {/* Organization Logos Section */}
-        <section className="w-full py-20 md:py-32 bg-accent/10">
+        <section className="w-full py-20 md:py-32 bg-background/70">
             <div className="container mx-auto px-4 md:px-6">
                  <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Trusted by Leading Organizations</h2>
@@ -136,15 +144,18 @@ export default function LandingPage() {
                     {placeholderImages.org_logos.map((logo) => (
                       <CarouselItem key={logo.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                         <div className="p-2">
-                          <div className="rounded-lg bg-card/30 p-6 flex items-center justify-center h-28 transition-all hover:bg-accent/50 hover:scale-105">
-                            <Image
-                              src={logo.src}
-                              alt={logo.name}
-                              data-ai-hint={logo.hint}
-                              width={150}
-                              height={75}
-                              className="object-contain"
-                            />
+                          <div className="rounded-lg bg-card/30 p-4 flex flex-col items-center justify-center h-36 transition-all hover:bg-accent/50 hover:scale-105 text-center">
+                            <div className="flex-grow flex items-center justify-center h-20">
+                                <Image
+                                src={logo.src}
+                                alt={logo.name}
+                                data-ai-hint={logo.hint}
+                                width={120}
+                                height={60}
+                                className="object-contain"
+                                />
+                            </div>
+                            <p className="mt-2 text-xs font-medium text-muted-foreground">{logo.name}</p>
                           </div>
                         </div>
                       </CarouselItem>
