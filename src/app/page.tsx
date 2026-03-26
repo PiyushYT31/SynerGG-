@@ -1,65 +1,166 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import placeholderImages from '@/lib/placeholder-images.json';
+
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <Logo />
+          <Button variant="ghost" asChild>
+            <Link href="#login">
+              Login <LogIn className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center">
-        <div className="container mx-auto px-4 md:px-6 py-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold font-headline mb-4">
-            Welcome to BGMI Synergy Connect
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-12">
-            The ultimate platform to connect players and organizations in the BGMI ecosystem.
-          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="text-left hover:border-primary transition-all">
-              <CardHeader>
-                <CardTitle className="font-headline text-2xl">For Organizations</CardTitle>
-                <CardDescription>
-                  Find the perfect talent to complete your roster. Create your profile, post openings, and discover players that match your team's style.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/organization/signup" className="w-full">
-                  <Button className="w-full">
-                    Organization Login / Sign Up
-                    <ArrowRight className="ml-2" />
-                  </Button>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative flex h-[80vh] min-h-[600px] w-full flex-col items-center justify-center text-center text-primary-foreground">
+          <Image
+            src={placeholderImages.home_hero.src}
+            alt="Esports Arena"
+            data-ai-hint={placeholderImages.home_hero.hint}
+            fill
+            className="object-cover -z-10"
+          />
+          <div className="absolute inset-0 bg-black/60 -z-10" />
+          <div className="container px-4 md:px-6">
+            <h1 className="text-5xl font-extrabold tracking-tight font-headline sm:text-6xl md:text-7xl">
+              The Transfer Window is Open
+            </h1>
+            <p className="mx-auto mt-6 max-w-3xl text-lg text-primary-foreground/80 md:text-xl">
+              Discover, recruit, and build your next champion roster. The ultimate scouting ground for BGMI esports talent.
+            </p>
+            <div className="mt-10">
+              <Button size="lg" asChild>
+                <Link href="#login">
+                  Get Started <ArrowRight className="ml-2" />
                 </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="text-left hover:border-primary transition-all">
-              <CardHeader>
-                <CardTitle className="font-headline text-2xl">For Players</CardTitle>
-                <CardDescription>
-                  Showcase your skills and find your dream team. Build your profile, highlight your achievements, and connect with top organizations.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/player/signup" className="w-full">
-                  <Button className="w-full">
-                    Player Login / Sign Up
-                    <ArrowRight className="ml-2" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+              </Button>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Login/Signup Section */}
+        <section id="login" className="w-full py-20 md:py-32 bg-background">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Join the Arena</h2>
+              <p className="max-w-2xl mx-auto mt-4 text-muted-foreground">
+                Whether you're a player looking for your next team or an organization scouting for talent, your journey starts here.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <Card className="text-left bg-card/80 backdrop-blur-sm border-primary/20 hover:border-primary transition-all">
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl">For Organizations</CardTitle>
+                  <CardDescription>
+                    Find the perfect talent to complete your roster. Create your profile, post openings, and discover players that match your team's style.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row gap-4">
+                  <Button className="w-full" asChild>
+                     <Link href="/organization/signup">
+                       Sign Up <ArrowRight className="ml-2" />
+                     </Link>
+                  </Button>
+                  <Button variant="secondary" className="w-full" asChild>
+                     <Link href="/organization/signup">
+                       Login <LogIn className="ml-2" />
+                     </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="text-left bg-card/80 backdrop-blur-sm border-secondary/20 hover:border-secondary transition-all">
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl">For Players</CardTitle>
+                  <CardDescription>
+                    Showcase your skills and find your dream team. Build your profile, highlight your achievements, and connect with top organizations.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row gap-4">
+                   <Button className="w-full" asChild>
+                     <Link href="/player/signup">
+                       Sign Up <ArrowRight className="ml-2" />
+                     </Link>
+                  </Button>
+                   <Button variant="secondary" className="w-full" asChild>
+                     <Link href="/player/signup">
+                       Login <LogIn className="ml-2" />
+                     </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Organization Logos Section */}
+        <section className="w-full py-20 md:py-32 bg-accent">
+            <div className="container mx-auto px-4 md:px-6">
+                 <div className="text-center mb-12">
+                    <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Trusted by Leading Organizations</h2>
+                    <p className="max-w-2xl mx-auto mt-4 text-muted-foreground">
+                        The best in the game use Transfer Window to build their squads.
+                    </p>
+                </div>
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full max-w-6xl mx-auto"
+                >
+                  <CarouselContent>
+                    {placeholderImages.org_logos.map((logo) => (
+                      <CarouselItem key={logo.id} className="basis-1/3 md:basis-1/4 lg:basis-1/6">
+                        <div className="p-1">
+                           <div className="flex aspect-video items-center justify-center p-4 bg-background/50 rounded-lg">
+                              <Image
+                                src={logo.src}
+                                alt={logo.hint}
+                                data-ai-hint={logo.hint}
+                                width={140}
+                                height={70}
+                                className="grayscale transition-all hover:grayscale-0"
+                              />
+                           </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden sm:flex" />
+                  <CarouselNext className="hidden sm:flex" />
+                </Carousel>
+            </div>
+        </section>
+
       </main>
+
+       <footer className="bg-background border-t">
+          <div className="container mx-auto py-6 px-4 md:px-6 text-center text-muted-foreground">
+              <Logo />
+              <p className="text-sm mt-2">© {new Date().getFullYear()} Transfer Window. All rights reserved.</p>
+          </div>
+       </footer>
     </div>
   );
 }

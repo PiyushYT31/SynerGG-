@@ -163,7 +163,7 @@ export default function PlayerProfilePage() {
                                     <Image
                                         src={thumbnail}
                                         alt="Gameplay highlights"
-                                        layout="fill"
+                                        fill
                                         objectFit="cover"
                                         className="rounded-lg border-2 border-transparent hover:border-primary transition-all cursor-pointer"
                                     />

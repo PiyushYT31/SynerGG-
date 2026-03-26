@@ -1,1 +1,48 @@
-{}
+{
+  "home_hero": {
+    "src": "https://picsum.photos/seed/hero/1920/1080",
+    "hint": "esports arena"
+  },
+  "org_logos": [
+    {
+      "id": "org1",
+      "src": "https://picsum.photos/seed/org1/200/100",
+      "hint": "gaming logo"
+    },
+    {
+      "id": "org2",
+      "src": "https://picsum.photos/seed/org2/200/100",
+      "hint": "team logo"
+    },
+    {
+      "id": "org3",
+      "src": "https://picsum.photos/seed/org3/200/100",
+      "hint": "esports logo"
+    },
+    {
+      "id": "org4",
+      "src": "https://picsum.photos/seed/org4/200/100",
+      "hint": "gaming emblem"
+    },
+    {
+      "id": "org5",
+      "src": "https://picsum.photos/seed/org5/200/100",
+      "hint": "team emblem"
+    },
+    {
+      "id": "org6",
+      "src": "https://picsum.photos/seed/org6/200/100",
+      "hint": "squad logo"
+    },
+    {
+      "id": "org7",
+      "src": "https://picsum.photos/seed/org7/200/100",
+      "hint": "gaming clan"
+    },
+    {
+      "id": "org8",
+      "src": "https://picsum.photos/seed/org8/200/100",
+      "hint": "esports team"
+    }
+  ]
+}

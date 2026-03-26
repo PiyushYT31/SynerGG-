@@ -66,6 +66,9 @@ export default function PlayerSignUp() {
       password: '',
       confirmPassword: '',
       fdRatio: 0,
+      role: undefined,
+      playstyle: undefined,
+      device: undefined
     },
   });
 
