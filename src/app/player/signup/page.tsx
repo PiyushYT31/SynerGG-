@@ -63,6 +63,9 @@ export default function PlayerSignUp() {
       highlightsUrl: '',
       experience: '',
       idealTeammateStrategy: '',
+      password: '',
+      confirmPassword: '',
+      fdRatio: 0,
     },
   });
 
