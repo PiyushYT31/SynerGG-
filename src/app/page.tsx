@@ -85,7 +85,7 @@ export default function LandingPage() {
                      </Link>
                   </Button>
                   <Button variant="secondary" className="w-full" asChild>
-                     <Link href="/organization/signup">
+                     <Link href="/organization/login">
                        Login <LogIn className="ml-2" />
                      </Link>
                   </Button>
@@ -106,7 +106,7 @@ export default function LandingPage() {
                      </Link>
                   </Button>
                    <Button variant="secondary" className="w-full" asChild>
-                     <Link href="/player/signup">
+                     <Link href="/player/login">
                        Login <LogIn className="ml-2" />
                      </Link>
                   </Button>

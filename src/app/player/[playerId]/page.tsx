@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 
@@ -62,7 +62,7 @@ function ProfileSkeleton() {
   }
 
 export default function PlayerProfilePage() {
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const params = useParams();
   const playerId = params.playerId as string;
 
@@ -72,6 +72,7 @@ export default function PlayerProfilePage() {
   );
   
   const { data: profile, isLoading } = useDoc<PlayerProfile>(playerRef);
+  const isOwner = user && profile && user.uid === profile.userId;
 
   if (isLoading) {
     return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -105,7 +106,16 @@ export default function PlayerProfilePage() {
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <Logo />
-           <Button asChild variant="outline"><Link href="/">Explore More Profiles</Link></Button>
+            <div className="flex items-center gap-4">
+                {isOwner && (
+                    <Button asChild>
+                        <Link href={`/player/${playerId}/edit`}>
+                             <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                        </Link>
+                    </Button>
+                )}
+                <Button asChild variant="outline"><Link href="/">Explore More Profiles</Link></Button>
+            </div>
         </div>
       </header>
 

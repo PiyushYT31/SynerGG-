@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Briefcase, Phone, Mail, ShieldCheck, Users } from 'lucide-react';
+import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -54,7 +54,7 @@ function ProfileSkeleton() {
 }
 
 export default function OrganizationProfilePage() {
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const params = useParams();
   const orgId = params.orgId as string;
 
@@ -64,6 +64,7 @@ export default function OrganizationProfilePage() {
   );
   
   const { data: profile, isLoading } = useDoc<OrganizationProfile>(orgRef);
+  const isOwner = user && profile && user.uid === profile.userId;
 
     if (isLoading) {
         return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -102,7 +103,16 @@ export default function OrganizationProfilePage() {
         <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
             <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                 <Logo />
-                <Button asChild variant="outline"><Link href="/">Explore More Profiles</Link></Button>
+                 <div className="flex items-center gap-4">
+                    {isOwner && (
+                        <Button asChild>
+                            <Link href={`/organization/${orgId}/edit`}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                            </Link>
+                        </Button>
+                    )}
+                    <Button asChild variant="outline"><Link href="/">Explore More Profiles</Link></Button>
+                </div>
             </div>
         </header>
 
