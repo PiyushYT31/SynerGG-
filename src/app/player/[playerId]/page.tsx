@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 
@@ -114,7 +114,7 @@ export default function PlayerProfilePage() {
                         </Link>
                     </Button>
                 )}
-                <Button asChild variant="outline"><Link href="/organizations">Explore More Profiles</Link></Button>
+                <Button asChild variant="outline"><Link href="/organizations">Explore Organizations</Link></Button>
             </div>
         </div>
       </header>
@@ -157,6 +157,14 @@ export default function PlayerProfilePage() {
 
                 <div className="mt-8 grid md:grid-cols-3 gap-6">
                     <div className="md:col-span-2 space-y-6">
+                         {profile.achievements && profile.achievements.length > 0 && (
+                            <Card>
+                                <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Trophy /> Achievements</CardTitle></CardHeader>
+                                <CardContent className="flex flex-wrap gap-2">
+                                    {profile.achievements.map((ach, i) => <Badge key={i} variant="outline">{ach}</Badge>)}
+                                </CardContent>
+                            </Card>
+                        )}
                         <Card>
                             <CardHeader><CardTitle className="font-headline flex items-center gap-2"><FileText /> Experience</CardTitle></CardHeader>
                             <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{profile.experience}</p></CardContent>
