@@ -79,7 +79,15 @@
         },
         "role": {
           "type": "string",
-          "description": "The player's primary role in-game (e.g., IGL, Entry Fragger, Support, Assaulter, Sniper)."
+          "description": "The player's primary role in-game.",
+          "enum": [
+            "IGL",
+            "Entry Fragger",
+            "Support",
+            "Assaulter",
+            "Sniper",
+            "Substitute"
+          ]
         },
         "experience": {
           "type": "string",
@@ -100,7 +108,13 @@
         },
         "playstyle": {
           "type": "string",
-          "description": "The player's general playstyle (e.g., Aggressive, Tactical, Balanced, Passive)."
+          "description": "The player's general playstyle.",
+          "enum": [
+            "Aggressive",
+            "Tactical",
+            "Balanced",
+            "Passive"
+          ]
         },
         "device": {
           "type": "string",
@@ -232,13 +246,22 @@
           "type": "string",
           "description": "Reference to the OrganizationProfile this slot belongs to. (Relationship: OrganizationProfile 1:N RosterSlot)"
         },
+        "organizationManagerUserId": {
+          "type": "string",
+          "description": "Denormalized ID of the user who manages the organization, for security rules."
+        },
         "slotName": {
           "type": "string",
           "description": "A descriptive name for the roster slot (e.g., 'IGL Slot', 'Entry Fragger 1')."
         },
         "status": {
           "type": "string",
-          "description": "The current status of the roster slot ('Locked', 'Vacant', or 'Open for Replacement')."
+          "description": "The current status of the roster slot.",
+          "enum": [
+            "Locked",
+            "Vacant",
+            "Open for Replacement"
+          ]
         },
         "playerId": {
           "type": "string",
@@ -246,11 +269,25 @@
         },
         "requiredRole": {
           "type": "string",
-          "description": "The primary role expected for a player filling this specific slot (e.g., IGL, Entry, Support)."
+          "description": "The primary role expected for a player filling this specific slot.",
+          "enum": [
+            "IGL",
+            "Entry Fragger",
+            "Support",
+            "Assaulter",
+            "Sniper",
+            "Substitute"
+          ]
         },
         "requiredPlaystyle": {
           "type": "string",
-          "description": "The desired playstyle for a player filling this slot (e.g., Aggressive, Tactical, Balanced)."
+          "description": "The desired playstyle for a player filling this slot.",
+          "enum": [
+            "Aggressive",
+            "Tactical",
+            "Balanced",
+            "Passive"
+          ]
         },
         "createdAt": {
           "type": "string",
@@ -266,6 +303,7 @@
       "required": [
         "id",
         "organizationId",
+        "organizationManagerUserId",
         "slotName",
         "status",
         "requiredRole",
@@ -291,9 +329,23 @@
           "type": "string",
           "description": "Reference to the PlayerProfile sending or receiving the request. (Relationship: PlayerProfile 1:N TryoutRequest)"
         },
+        "playerUserId": {
+          "type": "string",
+          "description": "Denormalized ID of the user associated with the player profile, for security rules."
+        },
+        "organizationManagerUserId": {
+          "type": "string",
+          "description": "Denormalized ID of the user who manages the organization, for security rules."
+        },
         "status": {
           "type": "string",
-          "description": "The current status of the tryout request ('Pending', 'Accepted', 'Declined', 'Withdrawn')."
+          "description": "The current status of the tryout request.",
+          "enum": [
+            "Pending",
+            "Accepted",
+            "Declined",
+            "Withdrawn"
+          ]
         },
         "message": {
           "type": "string",
@@ -301,7 +353,11 @@
         },
         "sentBy": {
           "type": "string",
-          "description": "Indicates whether the request was sent by 'Org' or 'Player'."
+          "description": "Indicates whether the request was sent by 'Org' or 'Player'.",
+          "enum": [
+            "Org",
+            "Player"
+          ]
         },
         "sentAt": {
           "type": "string",
@@ -322,10 +378,11 @@
         "id",
         "organizationId",
         "playerId",
+        "playerUserId",
+        "organizationManagerUserId",
         "status",
         "sentBy",
-        "sentAt",
-        "synergyScore"
+        "sentAt"
       ]
     }
   },
@@ -421,3 +478,4 @@
     "reasoning": "The proposed Firestore structure prioritizes security, scalability, and debuggability by adhering to the core design principles, especially Authorization Independence and Structural Segregation. Each entity is placed in its own top-level collection, ensuring homogeneous security postures within collections and simplifying security rules.\n\n**Authorization Independence:** This is achieved through strategic denormalization. For documents whose access depends on a 'parent' or related entity's owner, the owner's `userId` is explicitly copied into the document. For instance:\n*   `PlayerProfile` documents will include the `userId` of the owning `User`.\n*   `OrganizationProfile` documents will include the `userId` of the owning `User`.\n*   `RosterSlot` documents, which are owned by an organization, will denormalize the `userId` of the `OrganizationProfile`'s manager (renamed to `organizationManagerUserId` for clarity) directly into the `RosterSlot` document. This allows rules to check `request.auth.uid == resource.data.organizationManagerUserId` without needing to perform a `get()` operation on the parent `OrganizationProfile` document.\n*   `TryoutRequest` documents involve both a player and an organization. To allow both parties to manage the request independently, both the `userId` of the player (`playerUserId`) and the `userId` of the organization's manager (`organizationManagerUserId`) are denormalized into each `TryoutRequest` document. This eliminates complex `get()` calls and facilitates atomic updates.\n\n**Support for Query-Aware Permissions (QAPs):** The structural segregation inherently supports QAPs by separating data with different access requirements:\n*   `/player_profiles` and `/organization_profiles` collections are designed to be globally readable (for discovery by organizations and players, respectively) but write-restricted to their respective owners. This allows efficient `list` operations (e.g., 'show all players an Org can recruit', 'show all Orgs a player can apply to') without needing complex rule-based filtering, as the read permission is broad and the write permission is specific.\n*   `/roster_slots` and `/tryout_requests` collections contain data that is private to the involved parties. By denormalizing the owner `userId`s, `list` operations on these collections can efficiently filter by `userId` (e.g., `db.collection('roster_slots').where('organizationManagerUserId', '==', currentUser.uid)`) and security rules can strictly enforce that only the `currentUser.uid` can access their specific documents.\n\nThis design minimizes rule complexity, prevents waterfall `get()` operations, and ensures that data integrity and security are maintained efficiently across all read and write operations."
   }
 }
+    

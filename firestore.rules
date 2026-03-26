@@ -4,6 +4,7 @@
  * Key Security Decisions:
  *  - User Enumeration is prevented by disallowing list operations on the `/users` collection.
  *  - Profile collections (`/player_profiles`, `/organization_profiles`) are public-read to allow players and orgs to find each other.
+ *  - Roster slots are public-read so players can see vacancies.
  *  - Writes to all documents are strictly controlled by ownership checks.
  *  - Access to shared documents, like a `TryoutRequest`, is granted only to the specific participants (the player and the organization manager).
  * Denormalization for Authorization: To ensure fast and secure access checks, owner `userId`s are denormalized onto child or related documents. For example, `player_profiles` and `organization_profiles` contain a `userId` field. `roster_slots` and `tryout_requests` contain denormalized IDs (`organizationManagerUserId`, `playerUserId`) to avoid costly and slow `get()` calls in rules.
@@ -125,18 +126,18 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Roster slots are private to the organization that owns them. Only the
-     * organization manager can create, read, update, or delete their own roster slots.
+     * @description Roster slots are publicly readable so players can see vacancies, but
+     * only the organization manager can create, update, or delete their own roster slots.
      * NOTE: This rule requires an `organizationManagerUserId` field to be denormalized
      * onto each RosterSlot document for the ownership check.
      * @path /roster_slots/{rosterSlotId}
      * @allow (update) An org manager updating a slot where `resource.data.organizationManagerUserId` matches their `auth.uid`.
-     * @deny (get) A user attempting to read a roster slot owned by another organization.
-     * @principle Enforces strict ownership via a denormalized owner ID, avoiding costly `get` calls.
+     * @deny (create) A user attempting to create a roster slot for an organization they don't manage.
+     * @principle Enforces a "Public Read, Owner Write" model for discoverable roster vacancies.
      */
     match /roster_slots/{rosterSlotId} {
-      allow get: if isOwner(resource.data.organizationManagerUserId);
-      allow list: if isSignedIn(); // Allows for client-side queries like .where('organizationManagerUserId', '==', auth.uid)
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn() && request.resource.data.organizationManagerUserId == request.auth.uid;
       allow update: if isOwner(resource.data.organizationManagerUserId) && isExistingDoc() && request.resource.data.organizationManagerUserId == resource.data.organizationManagerUserId;
       allow delete: if isOwner(resource.data.organizationManagerUserId) && isExistingDoc();
@@ -172,3 +173,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

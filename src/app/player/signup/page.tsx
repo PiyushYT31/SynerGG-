@@ -33,7 +33,7 @@ const formSchema = z.object({
   phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number.' }),
   ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
   bgmiUid: z.string().min(5, { message: 'Please enter a valid BGMI UID.' }),
-  role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper']),
+  role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
   device: z.enum(['iOS', 'Android']),
@@ -221,6 +221,7 @@ export default function PlayerSignUp() {
                                                     <SelectItem value="Support">Support</SelectItem>
                                                     <SelectItem value="Assaulter">Assaulter</SelectItem>
                                                     <SelectItem value="Sniper">Sniper</SelectItem>
+                                                    <SelectItem value="Substitute">Substitute</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -347,3 +348,5 @@ export default function PlayerSignUp() {
     </div>
   );
 }
+
+    
