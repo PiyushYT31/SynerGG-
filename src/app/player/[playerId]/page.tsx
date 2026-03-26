@@ -114,7 +114,7 @@ export default function PlayerProfilePage() {
                         </Link>
                     </Button>
                 )}
-                <Button asChild variant="outline"><Link href="/">Explore More Profiles</Link></Button>
+                <Button asChild variant="outline"><Link href="/organizations">Explore More Profiles</Link></Button>
             </div>
         </div>
       </header>

@@ -111,7 +111,7 @@ export default function OrganizationProfilePage() {
                             </Link>
                         </Button>
                     )}
-                    <Button asChild variant="outline"><Link href="/">Explore More Profiles</Link></Button>
+                    <Button asChild variant="outline"><Link href="/players">Explore More Profiles</Link></Button>
                 </div>
             </div>
         </header>
