@@ -1,104 +1,104 @@
 {
   "home_hero": {
-    "src": "https://picsum.photos/seed/bgmi-character/1920/1080",
-    "hint": "esports character"
+    "src": "https://picsum.photos/seed/bgmi-hero/1920/1080",
+    "hint": "esports character splash art"
   },
   "org_logos": [
     {
       "id": "org1",
       "name": "iQOO SOUL",
       "src": "https://picsum.photos/seed/iqoo-soul/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org2",
       "name": "iQOO ORANGUTAN",
       "src": "https://picsum.photos/seed/iqoo-orangutan/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org3",
       "name": "GENESIS ESPORTS",
       "src": "https://picsum.photos/seed/genesis-esports/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org4",
-      "name": "Gladiators Esports",
-      "src": "https://picsum.photos/seed/gladiators-esports/200/100",
-      "hint": "esports logo"
+      "name": "Learn from Past",
+      "src": "https://picsum.photos/seed/learn-from-past/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org5",
       "name": "iQOO RECKONING ESPORTS",
       "src": "https://picsum.photos/seed/iqoo-reckoning/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org6",
       "name": "iQOO Revenant Xspark",
-      "src": "https://picsum.photos/seed/iqoo-revenant/200/100",
-      "hint": "esports logo"
+      "src": "https://picsum.photos/seed/iqoo-revenant-xspark/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org7",
-      "name": "Blind Esports",
-      "src": "https://picsum.photos/seed/blind-esports/200/100",
-      "hint": "esports logo"
+      "name": "Victores Sumus",
+      "src": "https://picsum.photos/seed/victores-sumus/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org8",
       "name": "Meta Ninza",
       "src": "https://picsum.photos/seed/meta-ninza/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org9",
       "name": "Hero Xtreme Godlike",
-      "src": "https://picsum.photos/seed/godlike/200/100",
-      "hint": "esports logo"
+      "src": "https://picsum.photos/seed/hero-xtreme-godlike/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org10",
-      "name": "God's Reign",
-      "src": "https://picsum.photos/seed/gods-reign/200/100",
-      "hint": "esports logo"
+      "name": "WELT E-SPORTS",
+      "src": "https://picsum.photos/seed/welt-esports/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org11",
       "name": "Nebula Esports",
       "src": "https://picsum.photos/seed/nebula-esports/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org12",
-      "name": "OR Esports",
-      "src": "https://picsum.photos/seed/or-esports/200/100",
-      "hint": "esports logo"
+      "name": "MYTH OFFICIAL",
+      "src": "https://picsum.photos/seed/myth-official/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org13",
       "name": "Wyld Fangs",
       "src": "https://picsum.photos/seed/wyld-fangs/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org14",
       "name": "K9 Esports",
       "src": "https://picsum.photos/seed/k9-esports/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     },
     {
       "id": "org15",
       "name": "iQOO Team Tamilas",
-      "src": "https://picsum.photos/seed/iqoo-tamilas/200/100",
-      "hint": "esports logo"
+      "src": "https://picsum.photos/seed/iqoo-team-tamilas/200/100",
+      "hint": "esports logo minimal"
     },
     {
       "id": "org16",
       "name": "Vasista Esports",
       "src": "https://picsum.photos/seed/vasista-esports/200/100",
-      "hint": "esports logo"
+      "hint": "esports logo minimal"
     }
   ]
 }
