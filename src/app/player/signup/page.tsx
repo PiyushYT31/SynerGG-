@@ -213,7 +213,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Primary Role</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select your main role" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="IGL">IGL (In-Game Leader)</SelectItem>
@@ -234,7 +234,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Playstyle</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select your playstyle" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="Aggressive">Aggressive</SelectItem>
@@ -264,7 +264,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Device</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select your device OS" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="iOS">iOS</SelectItem>
@@ -348,5 +348,3 @@ export default function PlayerSignUp() {
     </div>
   );
 }
-
-    
