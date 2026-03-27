@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'Transfer Window',
+  title: 'SynerGG',
   description: 'Bridging the gap between BGMI Organizations and Players',
 };
 

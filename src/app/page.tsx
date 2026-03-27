@@ -54,7 +54,7 @@ export default function LandingPage() {
               className="text-6xl font-extrabold tracking-tighter font-headline sm:text-7xl md:text-8xl text-neutral-50"
               style={{ textShadow: '0 5px 25px hsl(var(--primary) / 0.5), 0 2px 5px hsl(var(--primary) / 0.3)'}}
             >
-              The Transfer Window is Open
+              Unleash Your Synergy
             </h1>
             <p className="mx-auto mt-6 max-w-3xl text-lg text-primary-foreground/80 md:text-xl">
               Discover, recruit, and build your next champion roster. The ultimate scouting ground for BGMI esports talent.
@@ -130,7 +130,7 @@ export default function LandingPage() {
                  <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Trusted by Leading Organizations</h2>
                     <p className="max-w-2xl mx-auto mt-4 text-muted-foreground">
-                        The best in the game use Transfer Window to build their squads.
+                        The best in the game use SynerGG to build their squads.
                     </p>
                 </div>
                 <Carousel
@@ -172,7 +172,7 @@ export default function LandingPage() {
        <footer className="bg-background border-t">
           <div className="container mx-auto py-6 px-4 md:px-6 text-center text-muted-foreground">
               <Logo />
-              <p className="text-sm mt-2">© {new Date().getFullYear()} Transfer Window. All rights reserved.</p>
+              <p className="text-sm mt-2">© {new Date().getFullYear()} SynerGG. All rights reserved.</p>
           </div>
        </footer>
     </div>
