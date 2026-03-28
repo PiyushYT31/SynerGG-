@@ -57,6 +57,9 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
             idealTeammateStrategy: '',
             highlightsUrl: '',
             achievements: '',
+            fdRatio: 0,
+            role: undefined,
+            playstyle: undefined,
         },
     });
 
