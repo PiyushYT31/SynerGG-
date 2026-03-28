@@ -37,6 +37,7 @@ const formSchema = z.object({
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
   device: z.enum(['iOS', 'Android']),
+  profilePictureUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
   highlightsUrl: z.string().url({ message: 'Please enter a valid Google Drive or YouTube URL.' }),
   experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
   idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
@@ -61,6 +62,7 @@ export default function PlayerSignUp() {
       ign: '',
       bgmiUid: '',
       highlightsUrl: '',
+      profilePictureUrl: '',
       experience: '',
       idealTeammateStrategy: '',
       password: '',
@@ -103,7 +105,7 @@ export default function PlayerSignUp() {
             experience: values.experience,
             idealTeammateStrategy: values.idealTeammateStrategy,
             achievements: [],
-            profilePictureUrl: '',
+            profilePictureUrl: values.profilePictureUrl || '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
@@ -275,6 +277,20 @@ export default function PlayerSignUp() {
                                         </FormItem>
                                     )}
                                 />
+                                <div className="md:col-span-2">
+                                <FormField
+                                    control={form.control}
+                                    name="profilePictureUrl"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Profile Picture URL</FormLabel>
+                                            <FormControl><Input placeholder="https://example.com/your-photo.png" {...field} /></FormControl>
+                                            <FormDescription>Link to a picture for your profile.</FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                </div>
                                 <div className="md:col-span-2">
                                 <FormField
                                     control={form.control}

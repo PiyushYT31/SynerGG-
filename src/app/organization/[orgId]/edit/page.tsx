@@ -32,6 +32,8 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Organization name must be at least 2 characters.' }),
+  logoUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
+  bannerUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
   teamStyle: z.string().optional(),
   description: z.string().optional(),
   achievements: z.string().optional(),
@@ -44,6 +46,8 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      logoUrl: '',
+      bannerUrl: '',
       teamStyle: '',
       description: '',
       achievements: '',
@@ -54,6 +58,8 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
     if (profile) {
       form.reset({
         name: profile.name,
+        logoUrl: profile.logoUrl || '',
+        bannerUrl: profile.bannerUrl || '',
         teamStyle: profile.teamStyle || '',
         description: profile.description || '',
         achievements: profile.achievements?.join('\n') || '',
@@ -73,6 +79,34 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
               <FormControl>
                 <Input placeholder="e.g. Team Soul" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="logoUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Logo URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/logo.png" {...field} />
+              </FormControl>
+              <FormDescription>URL for your organization's logo.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="bannerUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Banner URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/banner.png" {...field} />
+              </FormControl>
+              <FormDescription>URL for your profile page banner image.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -147,6 +181,8 @@ export default function EditOrganizationProfilePage() {
 
         const updatedData = {
             name: values.name,
+            logoUrl: values.logoUrl,
+            bannerUrl: values.bannerUrl,
             teamStyle: values.teamStyle,
             description: values.description,
             achievements: achievementsArray,

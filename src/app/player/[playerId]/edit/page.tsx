@@ -34,6 +34,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 const formSchema = z.object({
   ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
+  profilePictureUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
   role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
@@ -51,6 +52,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
         resolver: zodResolver(formSchema),
         defaultValues: {
             ign: '',
+            profilePictureUrl: '',
             experience: '',
             idealTeammateStrategy: '',
             highlightsUrl: '',
@@ -62,6 +64,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
         if (profile) {
             form.reset({
                 ign: profile.ign,
+                profilePictureUrl: profile.profilePictureUrl || '',
                 role: profile.role,
                 playstyle: profile.playstyle,
                 fdRatio: profile.fdRatio,
@@ -99,6 +102,19 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                             </FormItem>
                         )}
                     />
+                    <div className="md:col-span-2">
+                        <FormField
+                            control={form.control}
+                            name="profilePictureUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Profile Picture URL</FormLabel>
+                                    <FormControl><Input placeholder="https://example.com/photo.png" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                      <FormField
                         control={form.control}
                         name="role"

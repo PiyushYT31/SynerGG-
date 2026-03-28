@@ -245,7 +245,7 @@ export default function OrganizationProfilePage() {
             <main className="container mx-auto px-4 md:px-6 py-12">
                 <Card className="overflow-hidden border-primary shadow-lg shadow-primary/10">
                     <div className="relative h-48 w-full">
-                        <Image src={`https://picsum.photos/seed/${profile.id}/1200/400`} alt={`${profile.name} banner`} fill objectFit="cover" data-ai-hint="esports banner" />
+                        <Image src={profile.bannerUrl || `https://picsum.photos/seed/${profile.id}/1200/400`} alt={`${profile.name} banner`} fill objectFit="cover" data-ai-hint="esports banner" />
                         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
                     </div>
                     <CardContent className="p-6 relative">

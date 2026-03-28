@@ -64,12 +64,19 @@ export default function DashboardLayout({
       </header>
       <main className="flex-1 container mx-auto px-4 md:px-6 py-12">
         <div className="space-y-4 mb-8">
-            <h1 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl flex items-center gap-3">
-                <LayoutGrid />
-                {profile?.name} Dashboard
-                {profile?.isVerified && <ShieldCheck className="h-7 w-7 text-primary" />}
-            </h1>
-            <p className="text-muted-foreground">Manage your roster, review applications, and edit your profile.</p>
+            <div className="flex items-center justify-between gap-4">
+                <h1 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl flex items-center gap-3">
+                    <LayoutGrid />
+                    {profile?.name} Dashboard
+                    {profile?.isVerified && <ShieldCheck className="h-7 w-7 text-primary" />}
+                </h1>
+                <Button asChild>
+                    <Link href={`/organization/${orgId}/edit`}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit Public Profile
+                    </Link>
+                </Button>
+            </div>
+            <p className="text-muted-foreground">Manage your roster, review applications, and edit your public profile information.</p>
         </div>
 
         <Tabs value={activeTab} className="w-full">

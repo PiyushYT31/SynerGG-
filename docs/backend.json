@@ -184,6 +184,11 @@
           "description": "URL to the organization's logo image.",
           "format": "uri"
         },
+        "bannerUrl": {
+            "type": "string",
+            "description": "URL for the organization's profile banner image.",
+            "format": "uri"
+        },
         "socialLinks": {
           "type": "array",
           "description": "An array of URLs to the organization's social media profiles.",
@@ -225,7 +230,6 @@
         "id",
         "userId",
         "name",
-        "logoUrl",
         "teamStyle",
         "description",
         "isVerified",

@@ -28,6 +28,7 @@ export interface OrganizationProfile {
   userId: string;
   name: string;
   logoUrl?: string;
+  bannerUrl?: string;
   socialLinks?: string[];
   achievements?: string[];
   teamStyle?: string;
