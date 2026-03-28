@@ -136,31 +136,29 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
             });
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!firestore || !confirm('Are you sure you want to delete this slot?')) return;
-        
+    
         setIsSubmitting(true);
         const slotDocRef = doc(firestore, 'roster_slots', slot.id);
-
-        deleteDoc(slotDocRef)
-            .then(() => {
-                toast({ title: 'Success', description: 'Roster slot deleted.' });
-            })
-            .catch((serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: slotDocRef.path,
-                    operation: 'delete',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-                toast({
-                    variant: 'destructive',
-                    title: 'Deletion Failed',
-                    description: 'Could not delete roster slot. You may not have permission.',
-                });
-            })
-            .finally(() => {
-                setIsSubmitting(false);
+    
+        try {
+            await deleteDoc(slotDocRef);
+            toast({ title: 'Success', description: 'Roster slot deleted.' });
+        } catch (serverError) {
+            const permissionError = new FirestorePermissionError({
+                path: slotDocRef.path,
+                operation: 'delete',
             });
+            errorEmitter.emit('permission-error', permissionError);
+            toast({
+                variant: 'destructive',
+                title: 'Deletion Failed',
+                description: 'Could not delete roster slot. You may not have permission.',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
   return (
