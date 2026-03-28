@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Edit, Trash2, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const ROLES = ['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute'];
 const PLAYSTYLES = ['Aggressive', 'Tactical', 'Balanced', 'Passive'];
@@ -101,37 +103,64 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
     const playerRef = useMemoFirebase(() => (firestore && slot.playerId ? doc(firestore, 'player_profiles', slot.playerId) : null), [firestore, slot.playerId]);
     const { data: player, isLoading: isPlayerLoading } = useDoc<PlayerProfile>(playerRef);
 
-    const handleUpdate: SubmitHandler<RosterSlotFormValues> = async (data) => {
+    const handleUpdate: SubmitHandler<RosterSlotFormValues> = (data) => {
         if (!firestore) return;
         setIsSubmitting(true);
-        try {
-            await updateDoc(doc(firestore, 'roster_slots', slot.id), {
-                ...data,
-                playerId: data.playerId || null, // Ensure it's null if empty
-                updatedAt: new Date().toISOString()
+        const slotDocRef = doc(firestore, 'roster_slots', slot.id);
+        const updatedData = {
+            ...data,
+            playerId: data.playerId || null, // Ensure it's null if empty
+            updatedAt: new Date().toISOString()
+        };
+
+        updateDoc(slotDocRef, updatedData)
+            .then(() => {
+                toast({ title: 'Success', description: 'Roster slot updated.' });
+                setIsDialogOpen(false);
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: slotDocRef.path,
+                    operation: 'update',
+                    requestResourceData: updatedData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({
+                    variant: 'destructive',
+                    title: 'Update Failed',
+                    description: 'Could not update roster slot. You may not have permission.',
+                });
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
-            toast({ title: 'Success', description: 'Roster slot updated.' });
-            setIsDialogOpen(false);
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not update roster slot.' });
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!firestore || !confirm('Are you sure you want to delete this slot?')) return;
+        
         setIsSubmitting(true);
-        try {
-            await deleteDoc(doc(firestore, 'roster_slots', slot.id));
-            toast({ title: 'Success', description: 'Roster slot deleted.' });
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete roster slot.' });
-        } finally {
-            setIsSubmitting(false);
-        }
+        const slotDocRef = doc(firestore, 'roster_slots', slot.id);
+
+        deleteDoc(slotDocRef)
+            .then(() => {
+                toast({ title: 'Success', description: 'Roster slot deleted.' });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: slotDocRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({
+                    variant: 'destructive',
+                    title: 'Deletion Failed',
+                    description: 'Could not delete roster slot. You may not have permission.',
+                });
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+            });
     };
 
   return (
@@ -180,26 +209,37 @@ export default function RosterManagementPage() {
   const rosterQuery = useMemoFirebase(() => (firestore && orgId ? query(collection(firestore, 'roster_slots'), where('organizationId', '==', orgId)) : null), [firestore, orgId]);
   const { data: rosterSlots, isLoading: isRosterLoading } = useCollection<RosterSlot>(rosterQuery);
 
-  const handleCreate: SubmitHandler<RosterSlotFormValues> = async (data) => {
+  const handleCreate: SubmitHandler<RosterSlotFormValues> = (data) => {
     if (!firestore || !user || !orgProfile) return;
     setIsSubmitting(true);
-    try {
-      await addDoc(collection(firestore, 'roster_slots'), {
-        ...data,
-        organizationId: orgId,
-        organizationManagerUserId: user.uid,
-        playerId: data.playerId || null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    
+    const slotsCollectionRef = collection(firestore, 'roster_slots');
+    const newSlotData = {
+      ...data,
+      organizationId: orgId,
+      organizationManagerUserId: user.uid,
+      playerId: data.playerId || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    addDoc(slotsCollectionRef, newSlotData)
+      .then(() => {
+        toast({ title: 'Success', description: 'New roster slot created.' });
+        setIsDialogOpen(false);
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: slotsCollectionRef.path,
+            operation: 'create',
+            requestResourceData: newSlotData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not create roster slot.' });
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-      toast({ title: 'Success', description: 'New roster slot created.' });
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error(error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not create roster slot.' });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const isLoading = isOrgLoading || isRosterLoading;
