@@ -1,19 +1,20 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, where, addDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { type PlayerProfile } from '@/lib/types';
+import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { type PlayerProfile, type OrganizationProfile, type TryoutRequest } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
     'IGL': <BrainCircuit className="h-4 w-4" />,
@@ -65,6 +66,7 @@ export default function PlayerProfilePage() {
   const { firestore, user } = useFirebase();
   const params = useParams();
   const playerId = params.playerId as string;
+  const { toast } = useToast();
 
   const playerRef = useMemoFirebase(
     () => (firestore && playerId ? doc(firestore, 'player_profiles', playerId) : null),
@@ -73,6 +75,39 @@ export default function PlayerProfilePage() {
   
   const { data: profile, isLoading } = useDoc<PlayerProfile>(playerRef);
   const isOwner = user && profile && user.uid === profile.userId;
+
+  // To see if current user is an org manager
+  const orgProfileQuery = useMemoFirebase(() => (
+      firestore && user ? query(collection(firestore, 'organization_profiles'), where('userId', '==', user.uid)) : null
+  ), [firestore, user]);
+  const { data: orgProfiles } = useCollection<OrganizationProfile>(orgProfileQuery);
+  const currentOrgProfile = orgProfiles?.[0] ?? null;
+
+  const handleInvite = async () => {
+      if (!currentOrgProfile || !profile || !firestore) {
+          toast({ variant: 'destructive', title: 'Cannot Invite', description: 'You must be logged in as an organization to invite players.' });
+          return;
+      }
+
+      try {
+          const tryoutRequest: Omit<TryoutRequest, 'id'> = {
+              organizationId: currentOrgProfile.id,
+              playerId: profile.id,
+              playerUserId: profile.userId,
+              organizationManagerUserId: currentOrgProfile.userId,
+              status: 'Pending',
+              sentBy: 'Org',
+              sentAt: new Date().toISOString(),
+              message: `Invitation to join ${currentOrgProfile.name}`
+          };
+          await addDoc(collection(firestore, 'tryout_requests'), tryoutRequest);
+          toast({ title: 'Invitation Sent!', description: `Your invitation has been sent to ${profile.ign}.` });
+      } catch (error) {
+          console.error("Error sending invitation:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not send your invitation. Please try again.' });
+      }
+  };
+
 
   if (isLoading) {
     return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -108,10 +143,22 @@ export default function PlayerProfilePage() {
           <Logo />
             <div className="flex items-center gap-4">
                 {isOwner && (
-                    <Button asChild>
-                        <Link href={`/player/${playerId}/edit`}>
-                             <Edit className="mr-2 h-4 w-4" /> Edit Profile
-                        </Link>
+                    <>
+                        <Button asChild variant="secondary">
+                            <Link href="/my-requests">
+                                 <ClipboardList className="mr-2 h-4 w-4" /> My Requests
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={`/player/${playerId}/edit`}>
+                                 <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                            </Link>
+                        </Button>
+                    </>
+                )}
+                {currentOrgProfile && !isOwner && (
+                    <Button onClick={handleInvite}>
+                        <UserPlus className="mr-2 h-4 w-4" /> Invite for Tryout
                     </Button>
                 )}
                 <Button asChild variant="outline"><Link href="/organizations">Explore Organizations</Link></Button>

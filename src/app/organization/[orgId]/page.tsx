@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { doc, collection, query, where, addDoc } from 'firebase/firestore';
 import Image from 'next/image';
 
-import { useFirebase, useDoc, useMemoFirebase, useCollection, addDocumentNonBlocking } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { type OrganizationProfile, type RosterSlot, type PlayerProfile, type TryoutRequest } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
