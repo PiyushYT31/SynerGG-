@@ -6,7 +6,8 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, updateDoc } from 'firebase/firestore';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,11 +30,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Organization name must be at least 2 characters.' }),
-  logoUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
-  bannerUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
+  logoUrl: z.string().optional(),
+  bannerUrl: z.string().optional(),
   teamStyle: z.string().optional(),
   description: z.string().optional(),
   achievements: z.string().optional(),
@@ -54,6 +56,26 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
     },
   });
 
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'bannerUrl') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        form.setError(field, { type: 'manual', message: 'Image size should be less than 2MB.' });
+        if (e.target) e.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue(field, reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -69,7 +91,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSave)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -83,34 +105,75 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="logoUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Logo URL</FormLabel>
+              <FormLabel>Logo</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/logo.png" {...field} />
+                <>
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    className="hidden"
+                    ref={logoInputRef}
+                    onChange={(e) => handleFileSelect(e, 'logoUrl')}
+                  />
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-24 w-24 cursor-pointer border" onClick={() => logoInputRef.current?.click()}>
+                      <AvatarImage src={field.value || undefined} alt="Organization Logo" />
+                      <AvatarFallback className="text-center text-xs p-2">Click to upload</AvatarFallback>
+                    </Avatar>
+                     <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
+                      Upload Logo
+                    </Button>
+                  </div>
+                </>
               </FormControl>
-              <FormDescription>URL for your organization's logo.</FormDescription>
+              <FormDescription>Recommended: 400x400px, max 2MB.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="bannerUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Banner URL</FormLabel>
+              <FormLabel>Banner Image</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/banner.png" {...field} />
+                <>
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    className="hidden"
+                    ref={bannerInputRef}
+                    onChange={(e) => handleFileSelect(e, 'bannerUrl')}
+                  />
+                  <div 
+                    className="relative aspect-[3/1] w-full rounded-lg border-2 border-dashed border-muted flex items-center justify-center cursor-pointer bg-card hover:border-primary overflow-hidden"
+                    onClick={() => bannerInputRef.current?.click()}
+                  >
+                    {field.value ? (
+                      <Image src={field.value} alt="Banner Preview" fill className="object-cover" />
+                    ) : (
+                      <div className="text-center text-muted-foreground p-4">
+                        <p>Click to upload banner</p>
+                        <p className="text-xs">Recommended: 1200x400px</p>
+                      </div>
+                    )}
+                  </div>
+                </>
               </FormControl>
-              <FormDescription>URL for your profile page banner image.</FormDescription>
+              <FormDescription>Max file size: 2MB.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="teamStyle"

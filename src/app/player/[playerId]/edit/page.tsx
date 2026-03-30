@@ -6,7 +6,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, updateDoc } from 'firebase/firestore';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -30,11 +30,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 const formSchema = z.object({
   ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
-  profilePictureUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
+  profilePictureUrl: z.string().optional(),
   role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
@@ -58,10 +59,29 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
             highlightsUrl: '',
             achievements: '',
             fdRatio: 0,
-            role: undefined,
-            playstyle: undefined,
+            role: 'IGL',
+            playstyle: 'Balanced',
         },
     });
+
+    const profilePicInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                form.setError('profilePictureUrl', { type: 'manual', message: 'Image size should be less than 2MB.' });
+                if (e.target) e.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                form.setValue('profilePictureUrl', reader.result as string, { shouldValidate: true });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
 
     useEffect(() => {
         if (profile) {
@@ -82,6 +102,37 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
+                 <FormField
+                    control={form.control}
+                    name="profilePictureUrl"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Profile Picture</FormLabel>
+                                <FormControl>
+                                <>
+                                <input
+                                    type="file"
+                                    accept="image/png, image/jpeg, image/gif"
+                                    className="hidden"
+                                    ref={profilePicInputRef}
+                                    onChange={handleFileSelect}
+                                />
+                                <div className="flex items-center gap-4">
+                                    <Avatar className="h-24 w-24 cursor-pointer border" onClick={() => profilePicInputRef.current?.click()}>
+                                    <AvatarImage src={field.value || undefined} alt="Player profile picture" />
+                                    <AvatarFallback className="text-center text-xs p-2">Click to upload</AvatarFallback>
+                                    </Avatar>
+                                    <Button type="button" variant="outline" onClick={() => profilePicInputRef.current?.click()}>
+                                        Upload Picture
+                                    </Button>
+                                </div>
+                                </>
+                            </FormControl>
+                            <FormDescription>Recommended: 400x400px, max 2MB.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                      <FormField
                         control={form.control}
@@ -105,19 +156,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                             </FormItem>
                         )}
                     />
-                    <div className="md:col-span-2">
-                        <FormField
-                            control={form.control}
-                            name="profilePictureUrl"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Profile Picture URL</FormLabel>
-                                    <FormControl><Input placeholder="https://example.com/photo.png" {...field} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+                    
                      <FormField
                         control={form.control}
                         name="role"
