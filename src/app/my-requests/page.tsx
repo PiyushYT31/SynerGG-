@@ -13,6 +13,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Check, X, ArrowLeft, Mail, LogOut, ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Badge } from '@/components/ui/badge';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 // Component to show Organization Info for a request
 function OrgInfo({ orgId }: { orgId: string }) {
@@ -43,21 +45,31 @@ function InvitationCard({ request }: { request: TryoutRequest }) {
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleResponse = async (status: 'Accepted' | 'Declined') => {
+    const handleResponse = (status: 'Accepted' | 'Declined') => {
         if (!firestore) return;
         setIsProcessing(true);
-        try {
-            await updateDoc(doc(firestore, 'tryout_requests', request.id), {
-                status,
-                respondedAt: new Date().toISOString(),
+        const requestRef = doc(firestore, 'tryout_requests', request.id);
+        const updatedData = {
+            status,
+            respondedAt: new Date().toISOString(),
+        };
+
+        updateDoc(requestRef, updatedData)
+            .then(() => {
+                toast({ title: 'Success', description: `Invitation has been ${status.toLowerCase()}.` });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: requestRef.path,
+                    operation: 'update',
+                    requestResourceData: updatedData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not update invitation status.' });
+            })
+            .finally(() => {
+                setIsProcessing(false);
             });
-            toast({ title: 'Success', description: `Invitation has been ${status.toLowerCase()}.` });
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: `Could not update invitation status.` });
-        } finally {
-            setIsProcessing(false);
-        }
     };
     
     return (
@@ -91,21 +103,32 @@ function ApplicationCard({ request }: { request: TryoutRequest }) {
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleWithdraw = async () => {
+    const handleWithdraw = () => {
         if (!firestore || !confirm('Are you sure you want to withdraw this application?')) return;
         setIsProcessing(true);
-        try {
-            await updateDoc(doc(firestore, 'tryout_requests', request.id), {
-                status: 'Withdrawn',
-                respondedAt: new Date().toISOString(),
+        
+        const requestRef = doc(firestore, 'tryout_requests', request.id);
+        const updatedData = {
+            status: 'Withdrawn',
+            respondedAt: new Date().toISOString(),
+        };
+
+        updateDoc(requestRef, updatedData)
+            .then(() => {
+                toast({ title: 'Success', description: `Application has been withdrawn.` });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: requestRef.path,
+                    operation: 'update',
+                    requestResourceData: updatedData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not withdraw application.' });
+            })
+            .finally(() => {
+                setIsProcessing(false);
             });
-            toast({ title: 'Success', description: `Application has been withdrawn.` });
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: `Could not withdraw application.` });
-        } finally {
-            setIsProcessing(false);
-        }
     };
     
     return (

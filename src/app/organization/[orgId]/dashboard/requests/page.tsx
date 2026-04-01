@@ -148,7 +148,8 @@ export default function TryoutRequestsPage() {
         ? query(
             collection(firestore, 'tryout_requests'), 
             where('organizationId', '==', orgId),
-            where('status', '==', 'Pending')
+            where('status', '==', 'Pending'),
+            where('sentBy', '==', 'Player')
           ) 
         : null,
     [firestore, orgId]
