@@ -86,7 +86,7 @@ function RequestCard({ request }: { request: TryoutRequest }) {
 
                     const slotRef = slotsSnap.docs[0].ref; // Update the first available slot
                     batch.update(slotRef, {
-                        playerId: player.id,
+                        playerId: playerSnap.id,
                         status: 'Locked'
                     });
 
