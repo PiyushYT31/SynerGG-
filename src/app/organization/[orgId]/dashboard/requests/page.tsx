@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import Link from 'next/link';
 
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -45,14 +45,68 @@ function RequestCard({ request }: { request: TryoutRequest }) {
         if (!firestore) return;
         setIsProcessing(true);
         try {
-            await updateDoc(doc(firestore, 'tryout_requests', request.id), {
-                status,
-                respondedAt: new Date().toISOString(),
-            });
-            toast({ title: 'Success', description: `Request has been ${status.toLowerCase()}.` });
-        } catch (error) {
+            if (status === 'Accepted') {
+                // 1. Get player's profile to find their role
+                const playerRef = doc(firestore, 'player_profiles', request.playerId);
+                const playerSnap = await getDoc(playerRef);
+
+                if (!playerSnap.exists()) {
+                    throw new Error("Player profile not found.");
+                }
+                const player = playerSnap.data() as PlayerProfile;
+
+                // 2. Find a vacant roster slot for that role
+                const slotsQuery = query(
+                    collection(firestore, 'roster_slots'),
+                    where('organizationId', '==', request.organizationId),
+                    where('status', 'in', ['Vacant', 'Open for Replacement']),
+                    where('requiredRole', '==', player.role)
+                );
+                const slotsSnap = await getDocs(slotsQuery);
+
+                if (slotsSnap.empty) {
+                    // No slot available, just accept the request without assigning
+                    await updateDoc(doc(firestore, 'tryout_requests', request.id), {
+                        status,
+                        respondedAt: new Date().toISOString(),
+                    });
+                    toast({ 
+                        title: 'Request Accepted', 
+                        description: `${player.ign} has been accepted, but no vacant roster slot was found for their role. Please create one.` 
+                    });
+                } else {
+                    // Slot found, update both request and slot atomically
+                    const batch = writeBatch(firestore);
+                    
+                    const requestRef = doc(firestore, 'tryout_requests', request.id);
+                    batch.update(requestRef, {
+                        status,
+                        respondedAt: new Date().toISOString(),
+                    });
+
+                    const slotRef = slotsSnap.docs[0].ref; // Update the first available slot
+                    batch.update(slotRef, {
+                        playerId: player.id,
+                        status: 'Locked'
+                    });
+
+                    await batch.commit();
+
+                    toast({ 
+                        title: 'Success!', 
+                        description: `${player.ign} has been accepted and added to the roster.` 
+                    });
+                }
+            } else { // status is 'Declined'
+                await updateDoc(doc(firestore, 'tryout_requests', request.id), {
+                    status,
+                    respondedAt: new Date().toISOString(),
+                });
+                toast({ title: 'Success', description: `Request has been ${status.toLowerCase()}.` });
+            }
+        } catch (error: any) {
             console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: `Could not update request status.` });
+            toast({ variant: 'destructive', title: 'Error', description: error.message || `Could not update request status.` });
         } finally {
             setIsProcessing(false);
         }
