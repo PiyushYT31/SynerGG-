@@ -13,7 +13,7 @@ export interface PlayerProfile {
   role: PlayerRole;
   experience: string;
   fdRatio: number;
-  highlightsUrl: string;
+  povLinks: { name: string; url: string; }[];
   idealTeammateStrategy: string;
   playstyle: Playstyle;
   device: Device;

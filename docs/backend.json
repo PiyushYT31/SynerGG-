@@ -97,10 +97,25 @@
           "type": "number",
           "description": "Player's current season F/D (Finish/Death) ratio."
         },
-        "highlightsUrl": {
-          "type": "string",
-          "description": "URL to a YouTube or Drive link showcasing player's gameplay highlights (POV reel).",
-          "format": "uri"
+        "povLinks": {
+          "type": "array",
+          "description": "A list of named links to gameplay footage (POVs), such as YouTube or Google Drive links.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "name",
+              "url"
+            ]
+          }
         },
         "idealTeammateStrategy": {
           "type": "string",
@@ -154,7 +169,6 @@
         "role",
         "experience",
         "fdRatio",
-        "highlightsUrl",
         "idealTeammateStrategy",
         "playstyle",
         "device",

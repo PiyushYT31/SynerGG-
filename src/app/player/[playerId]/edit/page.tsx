@@ -6,7 +6,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { deleteUser } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
@@ -51,10 +51,10 @@ const formSchema = z.object({
   role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
-  highlightsUrl: z.string().url({ message: 'Please enter a valid Google Drive or YouTube URL.' }),
   experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
   idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
   achievements: z.string().optional(),
+  povLinks: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -64,15 +64,15 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            ign: '',
-            profilePictureUrl: '',
-            experience: '',
-            idealTeammateStrategy: '',
-            highlightsUrl: '',
-            achievements: '',
-            fdRatio: 0,
-            role: 'IGL',
-            playstyle: 'Balanced',
+            ign: profile.ign || '',
+            profilePictureUrl: profile.profilePictureUrl || '',
+            experience: profile.experience || '',
+            idealTeammateStrategy: profile.idealTeammateStrategy || '',
+            achievements: profile.achievements?.join('\n') || '',
+            povLinks: profile.povLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
+            fdRatio: profile.fdRatio || 0,
+            role: profile.role,
+            playstyle: profile.playstyle,
         },
     });
 
@@ -93,23 +93,6 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
             reader.readAsDataURL(file);
         }
     };
-
-
-    useEffect(() => {
-        if (profile) {
-            form.reset({
-                ign: profile.ign,
-                profilePictureUrl: profile.profilePictureUrl || '',
-                role: profile.role,
-                playstyle: profile.playstyle,
-                fdRatio: profile.fdRatio,
-                highlightsUrl: profile.highlightsUrl,
-                experience: profile.experience,
-                idealTeammateStrategy: profile.idealTeammateStrategy,
-                achievements: profile.achievements?.join('\n') || '',
-            });
-        }
-    }, [profile, form]);
 
     return (
         <Form {...form}>
@@ -213,12 +196,12 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                     <div className="md:col-span-2">
                         <FormField
                             control={form.control}
-                            name="highlightsUrl"
+                            name="povLinks"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Highlights URL</FormLabel>
-                                    <FormControl><Input placeholder="https://youtube.com/..." {...field} /></FormControl>
-                                    <FormDescription>Link to your YouTube or Google Drive gameplay reel.</FormDescription>
+                                    <FormLabel>POV Links</FormLabel>
+                                    <FormControl><Textarea placeholder={"Scrims POV, https://youtube.com/...\nFinals POV, https://drive.google.com/..."} {...field} rows={5}/></FormControl>
+                                    <FormDescription>Enter one link per line, with the name and URL separated by a comma.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -291,11 +274,17 @@ export default function EditPlayerProfilePage() {
         if (!firestore || !profile) return;
 
         const playerDocRef = doc(firestore, 'player_profiles', profile.id);
+        
         const achievementsArray = values.achievements?.split('\n').filter(line => line.trim() !== '') || [];
+        const povLinksArray = values.povLinks?.split('\n').filter(line => line.trim() !== '' && line.includes(',')).map(line => {
+            const [name, ...urlParts] = line.split(',');
+            return { name: name.trim(), url: urlParts.join(',').trim() };
+        }) || [];
 
         const updatedData = {
             ...values,
             achievements: achievementsArray,
+            povLinks: povLinksArray,
             updatedAt: new Date().toISOString(),
         };
 

@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { doc, collection, query, where, addDoc } from 'firebase/firestore';
-import Image from 'next/image';
 import Link from 'next/link';
 
 import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -11,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -25,20 +24,6 @@ const roleIcons: { [key: string]: React.ReactNode } = {
     'Assaulter': <Target className="h-4 w-4" />,
     'Sniper': <Crosshair className="h-4 w-4" />,
 };
-
-function getYouTubeThumbnail(url: string) {
-    if (!url) return null;
-    const videoIdMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    if (videoIdMatch) return `https://i.ytimg.com/vi/${videoIdMatch[1]}/hqdefault.jpg`;
-    
-    // Simple check for Google Drive link
-    if (url.includes('drive.google.com')) {
-        // We can't generate a thumbnail, so we'll use a generic icon
-        return '/gdrive.png'; // You'd need to add a generic Drive icon to your public folder
-    }
-    return null;
-}
-
 
 function ProfileSkeleton() {
     return (
@@ -188,8 +173,6 @@ export default function PlayerProfilePage() {
     );
   }
   
-  const thumbnail = getYouTubeThumbnail(profile.highlightsUrl);
-
   return (
     <div className="bg-background text-foreground min-h-screen">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
@@ -312,22 +295,6 @@ export default function PlayerProfilePage() {
                             <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Users /> Ideal Teammates & Strategy</CardTitle></CardHeader>
                             <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{profile.idealTeammateStrategy}</p></CardContent>
                         </Card>
-                        {thumbnail && (
-                            <Card>
-                                <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Youtube className="text-red-500" /> Gameplay Highlights</CardTitle></CardHeader>
-                                <CardContent>
-                                    <Link href={profile.highlightsUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video">
-                                    <Image
-                                        src={thumbnail}
-                                        alt="Gameplay highlights"
-                                        fill
-                                        objectFit="cover"
-                                        className="rounded-lg border-2 border-transparent hover:border-primary transition-all cursor-pointer"
-                                    />
-                                    </Link>
-                                </CardContent>
-                            </Card>
-                        )}
                     </div>
                     <div className="space-y-6">
                         <Card>
@@ -343,6 +310,21 @@ export default function PlayerProfilePage() {
                                </div>
                            </CardContent>
                         </Card>
+                         {profile.povLinks && profile.povLinks.length > 0 && (
+                            <Card>
+                                <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Youtube className="text-red-500" /> POV Links</CardTitle></CardHeader>
+                                <CardContent className="space-y-2">
+                                    {profile.povLinks.map((link, i) => (
+                                        <Button asChild variant="outline" className="w-full justify-start" key={i}>
+                                            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                                <Link2 className="mr-2 h-4 w-4" />
+                                                {link.name}
+                                            </a>
+                                        </Button>
+                                    ))}
+                                </CardContent>
+                            </Card>
+                        )}
                         <Card>
                             <CardHeader><CardTitle className="font-headline">Contact</CardTitle></CardHeader>
                             <CardContent className="space-y-4">

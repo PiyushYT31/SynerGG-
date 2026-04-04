@@ -38,7 +38,6 @@ const formSchema = z.object({
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
   device: z.enum(['iOS', 'Android']),
-  highlightsUrl: z.string().url({ message: 'Please enter a valid Google Drive or YouTube URL.' }),
   experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
   idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
@@ -63,7 +62,6 @@ export default function PlayerSignUp() {
       phoneNumber: '',
       ign: '',
       bgmiUid: '',
-      highlightsUrl: '',
       experience: '',
       idealTeammateStrategy: '',
       password: '',
@@ -102,10 +100,10 @@ export default function PlayerSignUp() {
             device: values.device,
             fdRatio: values.fdRatio,
             playstyle: values.playstyle,
-            highlightsUrl: values.highlightsUrl,
             experience: values.experience,
             idealTeammateStrategy: values.idealTeammateStrategy,
             achievements: [],
+            povLinks: [],
             profilePictureUrl: '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -216,7 +214,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Primary Role</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select your main role" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="IGL">IGL (In-Game Leader)</SelectItem>
@@ -237,7 +235,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Playstyle</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select your playstyle" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="Aggressive">Aggressive</SelectItem>
@@ -267,7 +265,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Device</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select your device OS" /></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="iOS">iOS</SelectItem>
@@ -278,20 +276,6 @@ export default function PlayerSignUp() {
                                         </FormItem>
                                     )}
                                 />
-                                <div className="md:col-span-2">
-                                <FormField
-                                    control={form.control}
-                                    name="highlightsUrl"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Highlights URL</FormLabel>
-                                            <FormControl><Input placeholder="https://youtube.com/..." {...field} /></FormControl>
-                                            <FormDescription>Link to your YouTube or Google Drive gameplay reel.</FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                </div>
                                 <div className="md:col-span-2">
                                 <FormField
                                     control={form.control}
