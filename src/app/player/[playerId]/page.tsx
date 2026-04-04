@@ -11,10 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
     'IGL': <BrainCircuit className="h-4 w-4" />,
@@ -73,7 +74,7 @@ export default function PlayerProfilePage() {
     [firestore, playerId]
   );
   
-  const { data: profile, isLoading } = useDoc<PlayerProfile>(playerRef);
+  const { data: profile, isLoading: isProfileLoading } = useDoc<PlayerProfile>(playerRef);
   const isOwner = user && profile && user.uid === profile.userId;
 
   // To see if current user is an org manager
@@ -83,9 +84,22 @@ export default function PlayerProfilePage() {
   const { data: orgProfiles } = useCollection<OrganizationProfile>(orgProfileQuery);
   const currentOrgProfile = orgProfiles?.[0] ?? null;
 
+  // Check if player is locked in a roster
+  const lockedSlotQuery = useMemoFirebase(
+    () => (firestore && profile ? query(collection(firestore, 'roster_slots'), where('playerId', '==', profile.id), where('status', '==', 'Locked')) : null),
+    [firestore, profile]
+  );
+  const { data: lockedSlots, isLoading: isLockedSlotLoading } = useCollection(lockedSlotQuery);
+  const isPlayerLocked = !!lockedSlots && lockedSlots.length > 0;
+
   const handleInvite = async () => {
       if (!currentOrgProfile || !profile || !firestore) {
           toast({ variant: 'destructive', title: 'Cannot Invite', description: 'You must be logged in as an organization to invite players.' });
+          return;
+      }
+
+      if (isPlayerLocked) {
+          toast({ variant: 'destructive', title: 'Cannot Invite', description: `${profile.ign} is already locked in a team.` });
           return;
       }
 
@@ -108,6 +122,8 @@ export default function PlayerProfilePage() {
       }
   };
 
+
+  const isLoading = isProfileLoading || isLockedSlotLoading;
 
   if (isLoading) {
     return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -157,9 +173,22 @@ export default function PlayerProfilePage() {
                     </>
                 )}
                 {currentOrgProfile && !isOwner && (
-                    <Button onClick={handleInvite}>
-                        <UserPlus className="mr-2 h-4 w-4" /> Invite for Tryout
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="inline-block"> {/* Wrapper for disabled button */}
+                                    <Button onClick={handleInvite} disabled={isPlayerLocked}>
+                                        <UserPlus className="mr-2 h-4 w-4" /> Invite for Tryout
+                                    </Button>
+                                </div>
+                            </TooltipTrigger>
+                            {isPlayerLocked && (
+                                <TooltipContent>
+                                    <p>{profile.ign} is currently locked in another team's roster.</p>
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </TooltipProvider>
                 )}
                 <Button asChild variant="outline"><Link href="/organizations">Explore Organizations</Link></Button>
             </div>
@@ -175,7 +204,15 @@ export default function PlayerProfilePage() {
                         <AvatarFallback>{profile.ign.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow pt-2">
-                        <CardTitle className="font-headline text-4xl">{profile.ign}</CardTitle>
+                        <CardTitle className="font-headline text-4xl flex items-center gap-4">
+                            {profile.ign}
+                            {isPlayerLocked && (
+                                <Badge variant="destructive" className="gap-2 text-base py-1 px-3">
+                                    <Lock className="h-4 w-4" />
+                                    Locked
+                                </Badge>
+                            )}
+                        </CardTitle>
                         <CardDescription className="text-xl text-muted-foreground">{profile.playerName}</CardDescription>
                         <div className="flex flex-wrap gap-2 mt-4 text-sm">
                            <Badge variant="default" className="gap-2 text-base py-1 px-3">
