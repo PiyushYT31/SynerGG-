@@ -58,7 +58,6 @@ function InvitationCard({ request, playerProfile }: { request: TryoutRequest; pl
         const updatedData = {
             status,
             respondedAt: new Date().toISOString(),
-            ...(status === 'Accepted' && { mouGeneratedAt: new Date().toISOString() })
         };
 
         updateDoc(requestRef, updatedData)
@@ -81,7 +80,7 @@ function InvitationCard({ request, playerProfile }: { request: TryoutRequest; pl
     
     return (
         <>
-            {organization && request.status === 'Accepted' && (
+            {organization && request.status === 'Accepted' && request.mouGeneratedAt && (
                 <MoUDialog 
                     request={request}
                     player={playerProfile}
@@ -123,6 +122,11 @@ function InvitationCard({ request, playerProfile }: { request: TryoutRequest; pl
                             </Button>
                         )}
                     </div>
+                     {request.status === 'Accepted' && !request.mouGeneratedAt && (
+                        <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
+                            <ShieldCheck /> You have accepted the invitation! The organization may follow up with an agreement.
+                        </p>
+                    )}
                      {request.mouPlayerConfirmedAt && (
                         <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
                             <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}.
@@ -174,7 +178,7 @@ function ApplicationCard({ request, playerProfile }: { request: TryoutRequest; p
     
     return (
         <>
-             {organization && request.status === 'Accepted' && (
+             {organization && request.status === 'Accepted' && request.mouGeneratedAt && (
                 <MoUDialog 
                     request={request}
                     player={playerProfile}
@@ -206,6 +210,11 @@ function ApplicationCard({ request, playerProfile }: { request: TryoutRequest; p
                             </Button>
                         )}
                     </div>
+                     {request.status === 'Accepted' && !request.mouGeneratedAt && (
+                        <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
+                            <ShieldCheck /> Your application has been accepted!
+                        </p>
+                    )}
                     {request.mouPlayerConfirmedAt && (
                         <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
                             <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}.

@@ -15,6 +15,8 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { Check, X, FileSignature, ShieldCheck } from 'lucide-react';
 import { MoUDialog } from '@/components/mou-dialog';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 function PlayerInfo({ playerId }: { playerId: string }) {
     const { firestore } = useFirebase();
@@ -43,34 +45,42 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
     const [isMouOpen, setIsMouOpen] = useState(false);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     const playerRef = useMemoFirebase(() => firestore ? doc(firestore, 'player_profiles', request.playerId) : null, [firestore, request.playerId]);
     const {data: player} = useDoc<PlayerProfile>(playerRef);
 
-    const handleResponse = async (status: 'Accepted' | 'Declined') => {
+    const handleAccept = async (withMou: boolean) => {
         if (!firestore) return;
         setIsProcessing(true);
+        setIsAlertOpen(false); // Close dialog
+
         try {
             const requestRef = doc(firestore, 'tryout_requests', request.id);
+            
+            const updateData: any = {
+                status: 'Accepted',
+                respondedAt: new Date().toISOString(),
+            };
 
-            if (status === 'Accepted') {
-                await updateDoc(requestRef, {
-                    status,
-                    respondedAt: new Date().toISOString(),
-                    mouGeneratedAt: new Date().toISOString(),
-                });
+            if (withMou) {
+                updateData.mouGeneratedAt = new Date().toISOString();
+            }
+
+            await updateDoc(requestRef, updateData);
+
+            if (withMou) {
                 toast({ 
                     title: 'Request Accepted', 
                     description: `An MoU has been generated for ${player?.ign || 'the player'}. Please wait for the player to confirm.` 
                 });
-
-            } else { // Declined
-                await updateDoc(requestRef, {
-                    status,
-                    respondedAt: new Date().toISOString(),
+            } else {
+                 toast({ 
+                    title: 'Request Accepted', 
+                    description: `You have accepted ${player?.ign || 'the player'}'s application.` 
                 });
-                toast({ title: 'Success', description: `Request has been ${status.toLowerCase()}.` });
             }
+
         } catch (error: any) {
             console.error(error);
             toast({ variant: 'destructive', title: 'Error', description: error.message || `Could not update request status.` });
@@ -78,6 +88,24 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
             setIsProcessing(false);
         }
     };
+
+    const handleDecline = async () => {
+         if (!firestore) return;
+        setIsProcessing(true);
+        try {
+            const requestRef = doc(firestore, 'tryout_requests', request.id);
+            await updateDoc(requestRef, {
+                status: 'Declined',
+                respondedAt: new Date().toISOString(),
+            });
+            toast({ title: 'Success', description: `Request has been declined.` });
+        } catch (error: any) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Error', description: error.message || `Could not update request status.` });
+        } finally {
+            setIsProcessing(false);
+        }
+    }
     
     const handleConfirmAndLockPlayer = async () => {
         if (!firestore || !player) {
@@ -120,7 +148,7 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
 
     return (
         <>
-        {player && (
+        {player && request.mouGeneratedAt && (
             <MoUDialog 
                 request={request}
                 player={player}
@@ -131,6 +159,25 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                 onConfirm={handleConfirmAndLockPlayer}
             />
         )}
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Accept Application for {player?.ign || 'this player'}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Would you like to generate a Memorandum of Understanding (MoU) to formalize the agreement?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <Button variant="outline" onClick={() => handleAccept(false)} disabled={isProcessing}>
+                        Accept without MoU
+                    </Button>
+                    <AlertDialogAction onClick={() => handleAccept(true)} disabled={isProcessing}>
+                        Yes, Accept & Sign MoU
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <PlayerInfo playerId={request.playerId} />
@@ -148,10 +195,10 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                  <div className="mt-4 flex flex-wrap gap-2">
                     {request.status === 'Pending' && (
                         <>
-                            <Button onClick={() => handleResponse('Accepted')} disabled={isProcessing} size="sm">
+                            <Button onClick={() => setIsAlertOpen(true)} disabled={isProcessing} size="sm">
                                 <Check className="mr-2 h-4 w-4" /> Accept
                             </Button>
-                            <Button onClick={() => handleResponse('Declined')} disabled={isProcessing} size="sm" variant="destructive">
+                            <Button onClick={handleDecline} disabled={isProcessing} size="sm" variant="destructive">
                                 <X className="mr-2 h-4 w-4" /> Decline
                             </Button>
                         </>
@@ -163,8 +210,13 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                         </Button>
                     )}
                 </div>
-                {request.status === 'Accepted' && !request.mouPlayerConfirmedAt && (
+                {request.status === 'Accepted' && !request.mouPlayerConfirmedAt && request.mouGeneratedAt && (
                     <p className="text-sm text-muted-foreground mt-3">Waiting for player to confirm the agreement.</p>
+                )}
+                 {request.status === 'Accepted' && !request.mouGeneratedAt && (
+                    <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
+                        <ShieldCheck /> Application accepted.
+                    </p>
                 )}
                 {request.mouOrgConfirmedAt && (
                     <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
