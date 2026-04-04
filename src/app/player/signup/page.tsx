@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -21,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,7 +38,6 @@ const formSchema = z.object({
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
   device: z.enum(['iOS', 'Android']),
-  profilePictureUrl: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
   highlightsUrl: z.string().url({ message: 'Please enter a valid Google Drive or YouTube URL.' }),
   experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
   idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
@@ -52,6 +52,8 @@ export default function PlayerSignUp() {
   const { auth, firestore } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,7 +64,6 @@ export default function PlayerSignUp() {
       ign: '',
       bgmiUid: '',
       highlightsUrl: '',
-      profilePictureUrl: '',
       experience: '',
       idealTeammateStrategy: '',
       password: '',
@@ -105,7 +106,7 @@ export default function PlayerSignUp() {
             experience: values.experience,
             idealTeammateStrategy: values.idealTeammateStrategy,
             achievements: [],
-            profilePictureUrl: values.profilePictureUrl || '',
+            profilePictureUrl: '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
@@ -280,20 +281,6 @@ export default function PlayerSignUp() {
                                 <div className="md:col-span-2">
                                 <FormField
                                     control={form.control}
-                                    name="profilePictureUrl"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Profile Picture URL</FormLabel>
-                                            <FormControl><Input placeholder="https://example.com/your-photo.png" {...field} /></FormControl>
-                                            <FormDescription>Link to a picture for your profile.</FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                </div>
-                                <div className="md:col-span-2">
-                                <FormField
-                                    control={form.control}
                                     name="highlightsUrl"
                                     render={({ field }) => (
                                         <FormItem>
@@ -338,7 +325,21 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Password</FormLabel>
-                                            <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                        onClick={() => setShowPassword(prev => !prev)}
+                                                    >
+                                                        {showPassword ? <EyeOff /> : <Eye />}
+                                                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                                                    </Button>
+                                                </div>
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -349,7 +350,21 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Confirm Password</FormLabel>
-                                            <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff /> : <Eye />}
+                                                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                                                    </Button>
+                                                </div>
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}

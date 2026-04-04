@@ -1,6 +1,6 @@
 'use client';
 
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,8 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { ArrowLeft, LayoutGrid, Users, ClipboardList, ShieldCheck, Edit } from 'lucide-react';
-import { type OrganizationProfile } from '@/lib/types';
-import { doc } from 'firebase/firestore';
+import { type OrganizationProfile, type TryoutRequest } from '@/lib/types';
+import { doc, query, where, collection } from 'firebase/firestore';
 
 export default function DashboardLayout({
   children,
@@ -23,6 +23,13 @@ export default function DashboardLayout({
 
   const orgRef = useMemoFirebase(() => (firestore && orgId ? doc(firestore, 'organization_profiles', orgId) : null), [firestore, orgId]);
   const { data: profile } = useDoc<OrganizationProfile>(orgRef);
+
+  // Check for new applications to show notification dot
+  const newRequestsQuery = useMemoFirebase(() => (
+    firestore && orgId ? query(collection(firestore, 'tryout_requests'), where('organizationId', '==', orgId), where('sentBy', '==', 'Player'), where('status', '==', 'Pending'), where('isReadByOrg', '==', false)) : null
+  ), [firestore, orgId]);
+  const { data: newRequests } = useCollection<TryoutRequest>(newRequestsQuery);
+  const hasNewRequests = newRequests && newRequests.length > 0;
 
   const isOwner = user && profile && user.uid === profile.userId;
 
@@ -85,7 +92,10 @@ export default function DashboardLayout({
                     <Link href={`/organization/${orgId}/dashboard/roster`}><Users className="mr-2 h-4 w-4"/> Roster</Link>
                 </TabsTrigger>
                 <TabsTrigger value="requests" asChild>
-                    <Link href={`/organization/${orgId}/dashboard/requests`}><ClipboardList className="mr-2 h-4 w-4"/> Tryout Requests</Link>
+                    <Link href={`/organization/${orgId}/dashboard/requests`} className="relative">
+                        <ClipboardList className="mr-2 h-4 w-4"/> Tryout Requests
+                        {hasNewRequests && <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-1 ring-background" />}
+                    </Link>
                 </TabsTrigger>
             </TabsList>
             <TabsContent value={activeTab} className="mt-6">

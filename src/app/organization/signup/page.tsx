@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -21,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,7 +36,6 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
   phoneNumber: z.string().optional(),
-  logo: z.string().url({ message: 'Please enter a valid logo URL.' }).optional(),
   owner: z.string().min(2, {
     message: 'Owner name must be at least 2 characters.',
   }),
@@ -52,6 +52,8 @@ export default function OrganizationSignUp() {
   const { auth, firestore } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,7 +63,6 @@ export default function OrganizationSignUp() {
       password: '',
       confirmPassword: '',
       phoneNumber: '',
-      logo: '',
       owner: '',
       coOwner: '',
       coach: '',
@@ -89,7 +90,7 @@ export default function OrganizationSignUp() {
             name: values.organizationName,
             email: values.email,
             phoneNumber: values.phoneNumber || '',
-            logoUrl: values.logo || '',
+            logoUrl: '',
             owner: values.owner,
             coOwner: values.coOwner || '',
             coach: values.coach || '',
@@ -176,7 +177,19 @@ export default function OrganizationSignUp() {
                                         <FormItem>
                                             <FormLabel>Password</FormLabel>
                                             <FormControl>
-                                                <Input type="password" placeholder="••••••••" {...field} />
+                                                <div className="relative">
+                                                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                        onClick={() => setShowPassword(prev => !prev)}
+                                                    >
+                                                        {showPassword ? <EyeOff /> : <Eye />}
+                                                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                                                    </Button>
+                                                </div>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -189,7 +202,19 @@ export default function OrganizationSignUp() {
                                         <FormItem>
                                             <FormLabel>Confirm Password</FormLabel>
                                             <FormControl>
-                                                <Input type="password" placeholder="••••••••" {...field} />
+                                                 <div className="relative">
+                                                    <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff /> : <Eye />}
+                                                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                                                    </Button>
+                                                </div>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -204,22 +229,6 @@ export default function OrganizationSignUp() {
                                             <FormControl>
                                                 <Input placeholder="+91 1234567890" {...field} />
                                             </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="logo"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Logo URL (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="https://example.com/logo.png" {...field} />
-                                            </FormControl>
-                                            <FormDescription>
-                                                For now, please provide a URL to your logo. We'll add file uploads soon.
-                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}

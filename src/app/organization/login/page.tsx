@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -20,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
-import { ArrowLeft, LogIn } from 'lucide-react';
+import { ArrowLeft, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,6 +36,7 @@ export default function OrganizationLogin() {
   const { auth, firestore } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -129,9 +131,29 @@ export default function OrganizationLogin() {
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Password</FormLabel>
+                                        <div className="flex items-center">
+                                            <FormLabel>Password</FormLabel>
+                                            <Link
+                                            href="/forgot-password"
+                                            className="ml-auto inline-block text-sm underline"
+                                            >
+                                            Forgot your password?
+                                            </Link>
+                                        </div>
                                         <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
+                                            <div className="relative">
+                                                <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                    onClick={() => setShowPassword(prev => !prev)}
+                                                >
+                                                    {showPassword ? <EyeOff /> : <Eye />}
+                                                    <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                                                </Button>
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { collection, query, where, doc, updateDoc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import Link from 'next/link';
@@ -156,6 +156,24 @@ export default function TryoutRequestsPage() {
   );
   
   const { data: requests, isLoading } = useCollection<TryoutRequest>(requestsQuery);
+
+  useEffect(() => {
+    if (!firestore || !requests) return;
+
+    // Filter for requests that haven't been marked as read by the org yet.
+    // The query already filters for pending player requests.
+    const unreadRequests = requests.filter(r => r.isReadByOrg === false);
+
+    if (unreadRequests.length > 0) {
+        const batch = writeBatch(firestore);
+        unreadRequests.forEach(req => {
+            const requestRef = doc(firestore, 'tryout_requests', req.id);
+            batch.update(requestRef, { isReadByOrg: true });
+        });
+        // Mark as read silently in the background
+        batch.commit().catch(console.error);
+    }
+}, [requests, firestore]);
 
   return (
      <div>

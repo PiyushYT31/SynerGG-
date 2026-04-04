@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { type TryoutRequest, type OrganizationProfile, type PlayerProfile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -174,6 +174,21 @@ export default function MyRequestsPage() {
     
     const incomingRequests = allRequests?.filter(r => r.sentBy === 'Org' && r.status === 'Pending') ?? [];
     const outgoingRequests = allRequests?.filter(r => r.sentBy === 'Player') ?? [];
+
+    useEffect(() => {
+        if (!firestore || !allRequests) return;
+
+        const unreadRequests = allRequests.filter(r => r.sentBy === 'Org' && r.status === 'Pending' && r.isReadByPlayer === false);
+        
+        if (unreadRequests.length > 0) {
+            const batch = writeBatch(firestore);
+            unreadRequests.forEach(req => {
+                const requestRef = doc(firestore, 'tryout_requests', req.id);
+                batch.update(requestRef, { isReadByPlayer: true });
+            });
+            batch.commit().catch(console.error); // Mark as read silently
+        }
+    }, [allRequests, firestore]);
 
     const renderContent = () => {
         if (isLoading) {

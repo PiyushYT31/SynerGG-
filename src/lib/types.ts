@@ -69,6 +69,8 @@ export interface TryoutRequest {
     sentBy: 'Org' | 'Player';
     sentAt: string;
     respondedAt?: string;
+    isReadByPlayer?: boolean;
+    isReadByOrg?: boolean;
 }
 
     

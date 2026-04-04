@@ -381,6 +381,14 @@
         "synergyScore": {
           "type": "number",
           "description": "The calculated synergy match score between the player and organization at the time the request was made."
+        },
+        "isReadByPlayer": {
+          "type": "boolean",
+          "description": "Indicates if the player has viewed an incoming request. Used for notifications."
+        },
+        "isReadByOrg": {
+          "type": "boolean",
+          "description": "Indicates if the org manager has viewed an incoming application. Used for notifications."
         }
       },
       "required": [

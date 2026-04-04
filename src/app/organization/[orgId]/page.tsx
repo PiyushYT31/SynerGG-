@@ -76,6 +76,7 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
                 status: 'Pending',
                 sentBy: 'Player',
                 sentAt: new Date().toISOString(),
+                isReadByOrg: false,
             };
             await addDoc(collection(firestore, 'tryout_requests'), tryoutRequest);
             toast({ title: 'Application Sent!', description: `Your application for the ${slot.slotName} position at ${org.name} has been sent.` });

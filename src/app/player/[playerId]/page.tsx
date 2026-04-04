@@ -84,6 +84,13 @@ export default function PlayerProfilePage() {
   const { data: orgProfiles } = useCollection<OrganizationProfile>(orgProfileQuery);
   const currentOrgProfile = orgProfiles?.[0] ?? null;
 
+  // Check for new requests to show notification dot
+  const newRequestsQuery = useMemoFirebase(() => (
+    firestore && profile && isOwner ? query(collection(firestore, 'tryout_requests'), where('playerId', '==', profile.id), where('sentBy', '==', 'Org'), where('status', '==', 'Pending'), where('isReadByPlayer', '==', false)) : null
+  ), [firestore, profile, isOwner]);
+  const { data: newRequests } = useCollection<TryoutRequest>(newRequestsQuery);
+  const hasNewRequests = newRequests && newRequests.length > 0;
+
   // Check if player is locked in a roster
   const lockedSlotQuery = useMemoFirebase(
     () => (firestore && profile ? query(collection(firestore, 'roster_slots'), where('playerId', '==', profile.id), where('status', '==', 'Locked')) : null),
@@ -120,7 +127,8 @@ export default function PlayerProfilePage() {
               status: 'Pending',
               sentBy: 'Org',
               sentAt: new Date().toISOString(),
-              message: `Invitation to join ${currentOrgProfile.name}`
+              message: `Invitation to join ${currentOrgProfile.name}`,
+              isReadByPlayer: false,
           };
           await addDoc(collection(firestore, 'tryout_requests'), tryoutRequest);
           toast({ title: 'Invitation Sent!', description: `Your invitation has been sent to ${profile.ign}.` });
@@ -168,9 +176,10 @@ export default function PlayerProfilePage() {
             <div className="flex items-center gap-4">
                 {isOwner && (
                     <>
-                        <Button asChild variant="secondary">
+                        <Button asChild variant="secondary" className="relative">
                             <Link href="/my-requests">
                                  <ClipboardList className="mr-2 h-4 w-4" /> My Requests
+                                 {hasNewRequests && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-background" />}
                             </Link>
                         </Button>
                         <Button asChild>
