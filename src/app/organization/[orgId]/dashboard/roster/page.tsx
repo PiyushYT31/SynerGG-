@@ -144,7 +144,7 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
     
         try {
             await deleteDoc(slotDocRef);
-            toast({ title: 'Success', description: 'Roster slot deleted.' });
+            toast({ title: 'Success', description: 'Roster slot has been permanently deleted.' });
         } catch (serverError) {
             const permissionError = new FirestorePermissionError({
                 path: slotDocRef.path,
