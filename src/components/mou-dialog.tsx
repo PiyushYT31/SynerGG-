@@ -96,7 +96,7 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                             <h2 className="text-2xl font-bold text-gray-800">Memorandum of Understanding</h2>
                         </div>
                         <div className="space-y-4 text-sm">
-                            <p><strong>Date of Agreement:</strong> {format(new Date(request.mouGeneratedAt!), 'MMMM dd, yyyy')}</p>
+                            {request.mouGeneratedAt && <p><strong>Date of Agreement:</strong> {format(new Date(request.mouGeneratedAt), 'MMMM dd, yyyy')}</p>}
                             <p>This Memorandum of Understanding (MoU) is entered into by and between:</p>
                             <div className="pl-4">
                                 <p><strong>The Organization:</strong> {organization.name}</p>
@@ -105,7 +105,7 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                             <h3 className="font-bold pt-4 text-lg">1. Purpose</h3>
                             <p>The purpose of this MoU is to establish a formal tryout and potential roster position for The Player with The Organization for the game Battlegrounds Mobile India (BGMI).</p>
                             <h3 className="font-bold pt-4 text-lg">2. Agreement</h3>
-                            <p>Upon acceptance of the tryout request on {format(new Date(request.respondedAt!), 'MMMM dd, yyyy')}, The Player agrees to join The Organization's official roster in the role of <strong>{player.role}</strong>.</p>
+                            <p>Upon acceptance of the tryout request{request.respondedAt && ` on ${format(new Date(request.respondedAt), 'MMMM dd, yyyy')}`}, The Player agrees to join The Organization's official roster in the role of <strong>{player.role}</strong>.</p>
                             <p>The Player will be placed in a roster slot with "Locked" status, indicating their commitment to The Organization for the agreed-upon term (as per team policies, to be discussed separately).</p>
                             <h3 className="font-bold pt-4 text-lg">3. Confirmation</h3>
                             <p>By digitally confirming this MoU, both parties acknowledge and agree to the terms outlined herein. This confirmation signifies the start of the official relationship between The Player and The Organization.</p>
@@ -114,16 +114,16 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                             <div className="grid grid-cols-2 gap-8">
                                 <div>
                                     <h4 className="font-bold">Player Confirmation</h4>
-                                    {isPlayerConfirmed ? (
-                                        <p className="text-green-600 flex items-center gap-2 mt-2"><ShieldCheck /> Confirmed on {format(new Date(request.mouPlayerConfirmedAt!), 'PPp')}</p>
+                                    {isPlayerConfirmed && request.mouPlayerConfirmedAt ? (
+                                        <p className="text-green-600 flex items-center gap-2 mt-2"><ShieldCheck /> Confirmed on {format(new Date(request.mouPlayerConfirmedAt), 'PPp')}</p>
                                     ) : (
                                         <p className="text-yellow-600 mt-2">Awaiting Confirmation</p>
                                     )}
                                 </div>
                                  <div>
                                     <h4 className="font-bold">Organization Confirmation</h4>
-                                    {isOrgConfirmed ? (
-                                        <p className="text-green-600 flex items-center gap-2 mt-2"><ShieldCheck /> Confirmed on {format(new Date(request.mouOrgConfirmedAt!), 'PPp')}</p>
+                                    {isOrgConfirmed && request.mouOrgConfirmedAt ? (
+                                        <p className="text-green-600 flex items-center gap-2 mt-2"><ShieldCheck /> Confirmed on {format(new Date(request.mouOrgConfirmedAt), 'PPp')}</p>
                                     ) : (
                                         <p className="text-yellow-600 mt-2">Awaiting Confirmation</p>
                                     )}
