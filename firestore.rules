@@ -193,7 +193,7 @@ service cloud.firestore {
       }
 
       allow get: if isVodPlayer(resource.data) || isCommentOwner(resource.data);
-      allow list: if isSignedIn(); // Allows querying by playerId or orgId
+      allow list: if true; // Allows querying by anyone
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.organizationManagerUserId;
       allow update, delete: if isCommentOwner(resource.data);
     }
