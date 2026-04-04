@@ -113,7 +113,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
             <FormItem>
               <FormLabel>Logo</FormLabel>
               <FormControl>
-                <>
+                <div>
                   <input
                     type="file"
                     accept="image/png, image/jpeg, image/gif"
@@ -130,7 +130,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
                       Upload Logo
                     </Button>
                   </div>
-                </>
+                </div>
               </FormControl>
               <FormDescription>Recommended: 400x400px, max 2MB.</FormDescription>
               <FormMessage />
@@ -145,7 +145,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
             <FormItem>
               <FormLabel>Banner Image</FormLabel>
               <FormControl>
-                <>
+                <div>
                   <input
                     type="file"
                     accept="image/png, image/jpeg, image/gif"
@@ -166,7 +166,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
                       </div>
                     )}
                   </div>
-                </>
+                </div>
               </FormControl>
               <FormDescription>Max file size: 2MB.</FormDescription>
               <FormMessage />

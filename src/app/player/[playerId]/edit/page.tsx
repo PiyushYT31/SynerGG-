@@ -109,7 +109,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                         <FormItem>
                             <FormLabel>Profile Picture</FormLabel>
                                 <FormControl>
-                                <>
+                                <div>
                                 <input
                                     type="file"
                                     accept="image/png, image/jpeg, image/gif"
@@ -126,7 +126,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                                         Upload Picture
                                     </Button>
                                 </div>
-                                </>
+                                </div>
                             </FormControl>
                             <FormDescription>Recommended: 400x400px, max 2MB.</FormDescription>
                             <FormMessage />
