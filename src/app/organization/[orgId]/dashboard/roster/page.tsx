@@ -28,6 +28,7 @@ const rosterSlotSchema = z.object({
   slotName: z.string().min(2, 'Slot name is required.'),
   requiredRole: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   requiredPlaystyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
+  minFdRatio: z.coerce.number().min(0, 'Minimum F/D Ratio cannot be negative.'),
   status: z.enum(['Locked', 'Vacant', 'Open for Replacement']),
   playerId: z.string().optional(),
 });
@@ -46,6 +47,7 @@ function RosterSlotForm({
     resolver: zodResolver(rosterSlotSchema),
     defaultValues: defaultValues || {
       slotName: '',
+      minFdRatio: 0,
       playerId: '',
     },
   });
@@ -72,6 +74,17 @@ function RosterSlotForm({
             <FormItem><FormLabel>Required Playstyle</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a playstyle" /></SelectTrigger></FormControl><SelectContent>{PLAYSTYLES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
           )} />
         </div>
+        <FormField
+          control={form.control}
+          name="minFdRatio"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Minimum F/D Ratio</FormLabel>
+              <FormControl><Input type="number" step="0.1" placeholder="e.g. 3.0" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField control={form.control} name="status" render={({ field }) => (
             <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl><SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
         )} />
@@ -81,7 +94,7 @@ function RosterSlotForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Player ID (Optional)</FormLabel>
-              <FormControl><Input placeholder="Enter Player Profile ID" {...field} /></FormControl>
+              <FormControl><Input placeholder="Enter Player Profile ID" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -136,30 +149,28 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
             });
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!firestore || !confirm('Are you sure you want to delete this slot? This action is permanent.')) return;
         setIsSubmitting(true);
         const slotDocRef = doc(firestore, 'roster_slots', slot.id);
         
-        deleteDoc(slotDocRef)
-            .then(() => {
-                toast({ title: 'Success', description: 'Roster slot has been permanently deleted.' });
-            })
-            .catch((serverError) => {
-                 const permissionError = new FirestorePermissionError({
-                    path: slotDocRef.path,
-                    operation: 'delete',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-                toast({
-                    variant: 'destructive',
-                    title: 'Deletion Failed',
-                    description: 'Could not delete roster slot. You may not have permission.',
-                });
-            })
-            .finally(() => {
-                setIsSubmitting(false);
+        try {
+            await deleteDoc(slotDocRef)
+            toast({ title: 'Success', description: 'Roster slot has been permanently deleted.' });
+        } catch (serverError) {
+            const permissionError = new FirestorePermissionError({
+                path: slotDocRef.path,
+                operation: 'delete',
             });
+            errorEmitter.emit('permission-error', permissionError);
+            toast({
+                variant: 'destructive',
+                title: 'Deletion Failed',
+                description: 'Could not delete roster slot. You may not have permission.',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
   return (
@@ -226,6 +237,7 @@ export default function RosterManagementPage() {
       .then(() => {
         toast({ title: 'Success', description: 'New roster slot created.' });
         setIsDialogOpen(false);
+        form.reset();
       })
       .catch((serverError) => {
         const permissionError = new FirestorePermissionError({

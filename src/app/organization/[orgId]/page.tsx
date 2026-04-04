@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid } from 'lucide-react';
+import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -49,12 +49,21 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
     const { firestore } = useFirebase();
     const { toast } = useToast();
 
-    const canApply = currentPlayerProfile && currentPlayerProfile.role === slot.requiredRole;
+    const canApplyByRole = !!(currentPlayerProfile && currentPlayerProfile.role === slot.requiredRole);
+    const canApplyByFd = !!(currentPlayerProfile && currentPlayerProfile.fdRatio >= slot.minFdRatio);
+    const canApply = canApplyByRole && canApplyByFd;
+    
     const isApplyButtonVisible = (slot.status === 'Vacant' || slot.status === 'Open for Replacement') && currentPlayerProfile;
     
     const handleApply = async () => {
         if (!canApply || !currentPlayerProfile || !firestore) {
-            toast({ variant: 'destructive', title: 'Cannot Apply', description: 'Your role does not match the required role for this slot.' });
+            let errorDesc = 'You do not meet the requirements for this slot.';
+            if (!canApplyByRole) {
+                 errorDesc = `Your role (${currentPlayerProfile?.role}) does not match the required role (${slot.requiredRole}).`;
+            } else if (!canApplyByFd) {
+                 errorDesc = `Your F/D ratio (${currentPlayerProfile?.fdRatio}) does not meet the minimum requirement of ${slot.minFdRatio}.`;
+            }
+            toast({ variant: 'destructive', title: 'Cannot Apply', description: errorDesc });
             return;
         }
 
@@ -75,6 +84,15 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
             toast({ variant: 'destructive', title: 'Error', description: 'Could not send your application. Please try again.' });
         }
     };
+    
+    let tooltipMessage = '';
+    if (isApplyButtonVisible && !canApply) {
+        if (!canApplyByRole) {
+            tooltipMessage = `Your profile role (${currentPlayerProfile?.role}) does not match the required role (${slot.requiredRole}).`;
+        } else if (!canApplyByFd) {
+             tooltipMessage = `Your F/D ratio (${currentPlayerProfile?.fdRatio}) does not meet the minimum of ${slot.minFdRatio}.`;
+        }
+    }
 
     return (
         <Card className="flex flex-col">
@@ -92,9 +110,10 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
                         </Tooltip>
                     </TooltipProvider>
                 </CardTitle>
-                <CardDescription className="flex items-center gap-4">
+                <CardDescription className="flex items-center gap-4 flex-wrap">
                     <Badge variant="outline" className="gap-2">{roleIcons[slot.requiredRole]} {slot.requiredRole}</Badge>
                     <Badge variant="outline">{slot.requiredPlaystyle}</Badge>
+                    <Badge variant="outline" className="gap-2"><TrendingUp /> F/D &ge; {slot.minFdRatio}</Badge>
                 </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
@@ -114,9 +133,9 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
                                     </Button>
                                 </div>
                             </TooltipTrigger>
-                            {!canApply && (
+                            {tooltipMessage && (
                                 <TooltipContent>
-                                    <p>Your profile role ({currentPlayerProfile?.role}) does not match the required role ({slot.requiredRole}).</p>
+                                    <p>{tooltipMessage}</p>
                                 </TooltipContent>
                             )}
                         </Tooltip>

@@ -53,6 +53,7 @@ export interface RosterSlot {
     playerId?: string;
     requiredRole: PlayerRole;
     requiredPlaystyle: Playstyle;
+    minFdRatio: number;
     createdAt: string;
     updatedAt: string;
 }
