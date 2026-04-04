@@ -54,53 +54,17 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
             const requestRef = doc(firestore, 'tryout_requests', request.id);
 
             if (status === 'Accepted') {
-                const playerSnap = await getDoc(playerRef!);
+                await updateDoc(requestRef, {
+                    status,
+                    respondedAt: new Date().toISOString(),
+                    mouGeneratedAt: new Date().toISOString(),
+                });
+                toast({ 
+                    title: 'Request Accepted', 
+                    description: `An MoU has been generated for ${player?.ign || 'the player'}. Please wait for the player to confirm.` 
+                });
 
-                if (!playerSnap.exists()) throw new Error("Player profile not found.");
-                
-                const player = playerSnap.data() as PlayerProfile;
-
-                const slotsQuery = query(
-                    collection(firestore, 'roster_slots'),
-                    where('organizationId', '==', request.organizationId),
-                    where('status', 'in', ['Vacant', 'Open for Replacement']),
-                    where('requiredRole', '==', player.role)
-                );
-                const slotsSnap = await getDocs(slotsQuery);
-
-                if (slotsSnap.empty) {
-                    await updateDoc(requestRef, {
-                        status,
-                        respondedAt: new Date().toISOString(),
-                        mouGeneratedAt: new Date().toISOString(),
-                    });
-                    toast({ 
-                        title: 'Request Accepted', 
-                        description: `${player.ign} has been accepted, but no vacant roster slot was found. An MoU has been generated.` 
-                    });
-                } else {
-                    const batch = writeBatch(firestore);
-                    
-                    batch.update(requestRef, {
-                        status,
-                        respondedAt: new Date().toISOString(),
-                        mouGeneratedAt: new Date().toISOString(),
-                    });
-
-                    const slotRef = slotsSnap.docs[0].ref;
-                    batch.update(slotRef, {
-                        playerId: playerSnap.id,
-                        status: 'Locked'
-                    });
-
-                    await batch.commit();
-
-                    toast({ 
-                        title: 'Success!', 
-                        description: `${player.ign} has been accepted and added to the roster. An MoU has been generated.` 
-                    });
-                }
-            } else {
+            } else { // Declined
                 await updateDoc(requestRef, {
                     status,
                     respondedAt: new Date().toISOString(),
@@ -115,6 +79,45 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
         }
     };
     
+    const handleConfirmAndLockPlayer = async () => {
+        if (!firestore || !player) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Player data not available to update roster.' });
+            return;
+        }
+
+        try {
+            const slotsQuery = query(
+                collection(firestore, 'roster_slots'),
+                where('organizationId', '==', organization.id),
+                where('status', 'in', ['Vacant', 'Open for Replacement']),
+                where('requiredRole', '==', player.role)
+            );
+            const slotsSnap = await getDocs(slotsQuery);
+
+            if (!slotsSnap.empty) {
+                const slotToUpdateRef = slotsSnap.docs[0].ref;
+                await updateDoc(slotToUpdateRef, {
+                    playerId: player.id,
+                    status: 'Locked'
+                });
+                toast({
+                    title: 'Player Locked!',
+                    description: `${player.ign} has been successfully locked into your roster.`
+                });
+            } else {
+                 toast({
+                    title: 'No Matching Slot',
+                    description: `Roster not updated. No vacant slot for role '${player.role}' was found.`
+                });
+            }
+        } catch(error) {
+            console.error("Error locking player into roster:", error);
+            toast({ variant: 'destructive', title: 'Roster Update Failed', description: 'Could not add player to the roster.' });
+            // Re-throw to make the calling function in the dialog aware of the failure
+            throw error;
+        }
+    };
+
     return (
         <>
         {player && (
@@ -125,6 +128,7 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                 open={isMouOpen}
                 onOpenChange={setIsMouOpen}
                 currentUserType="org"
+                onConfirm={handleConfirmAndLockPlayer}
             />
         )}
         <Card>
@@ -153,12 +157,15 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                         </>
                     )}
                     {request.status === 'Accepted' && request.mouGeneratedAt && (
-                         <Button onClick={() => setIsMouOpen(true)} size="sm" variant="outline">
+                         <Button onClick={() => setIsMouOpen(true)} size="sm" variant="outline" disabled={!request.mouPlayerConfirmedAt}>
                             <FileSignature className="mr-2" /> 
                             {request.mouOrgConfirmedAt ? 'View Confirmed MoU' : 'View & Confirm MoU'}
                         </Button>
                     )}
                 </div>
+                {request.status === 'Accepted' && !request.mouPlayerConfirmedAt && (
+                    <p className="text-sm text-muted-foreground mt-3">Waiting for player to confirm the agreement.</p>
+                )}
                 {request.mouOrgConfirmedAt && (
                     <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
                         <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouOrgConfirmedAt), 'PP')}.

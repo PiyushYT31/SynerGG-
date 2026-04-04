@@ -21,9 +21,10 @@ interface MoUDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     currentUserType: 'player' | 'org';
+    onConfirm?: () => Promise<void>;
 }
 
-export function MoUDialog({ request, player, organization, open, onOpenChange, currentUserType }: MoUDialogProps) {
+export function MoUDialog({ request, player, organization, open, onOpenChange, currentUserType, onConfirm }: MoUDialogProps) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const mouContentRef = useRef<HTMLDivElement>(null);
@@ -64,11 +65,19 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
         
         try {
             await updateDoc(requestRef, updateData);
-            toast({ title: 'Agreement Confirmed', description: 'Your confirmation has been recorded.' });
+            
+            if (onConfirm) {
+                await onConfirm();
+            } else {
+                toast({ title: 'Agreement Confirmed', description: 'Your confirmation has been recorded.' });
+            }
+            
             onOpenChange(false);
         } catch (error) {
             console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not confirm agreement.' });
+            if (!onConfirm) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not confirm agreement.' });
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -76,9 +85,15 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
 
     const isPlayerConfirmed = !!request.mouPlayerConfirmedAt;
     const isOrgConfirmed = !!request.mouOrgConfirmedAt;
-    const canCurrentUserConfirm = 
-        (currentUserType === 'player' && !isPlayerConfirmed) ||
-        (currentUserType === 'org' && !isOrgConfirmed);
+
+    let canCurrentUserConfirm = false;
+    if (currentUserType === 'player' && !isPlayerConfirmed) {
+        canCurrentUserConfirm = true;
+    } else if (currentUserType === 'org' && isPlayerConfirmed && !isOrgConfirmed) {
+        // Org can only confirm AFTER player has confirmed
+        canCurrentUserConfirm = true;
+    }
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,7 +121,7 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                             <p>The purpose of this MoU is to establish a formal tryout and potential roster position for The Player with The Organization for the game Battlegrounds Mobile India (BGMI).</p>
                             <h3 className="font-bold pt-4 text-lg">2. Agreement</h3>
                             <p>Upon acceptance of the tryout request{request.respondedAt && ` on ${format(new Date(request.respondedAt), 'MMMM dd, yyyy')}`}, The Player agrees to join The Organization's official roster in the role of <strong>{player.role}</strong>.</p>
-                            <p>The Player will be placed in a roster slot with "Locked" status, indicating their commitment to The Organization for the agreed-upon term (as per team policies, to be discussed separately).</p>
+                            <p>The Player will be placed in a roster slot with "Locked" status, indicating their commitment to The Organization for the agreed-upon term (as per team policies, to be discussed separately), upon final confirmation from both parties.</p>
                             <h3 className="font-bold pt-4 text-lg">3. Confirmation</h3>
                             <p>By digitally confirming this MoU, both parties acknowledge and agree to the terms outlined herein. This confirmation signifies the start of the official relationship between The Player and The Organization.</p>
                         </div>
@@ -125,7 +140,9 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                                     {isOrgConfirmed && request.mouOrgConfirmedAt ? (
                                         <p className="text-green-600 flex items-center gap-2 mt-2"><ShieldCheck /> Confirmed on {format(new Date(request.mouOrgConfirmedAt), 'PPp')}</p>
                                     ) : (
-                                        <p className="text-yellow-600 mt-2">Awaiting Confirmation</p>
+                                         isPlayerConfirmed ?
+                                         <p className="text-yellow-600 mt-2">Awaiting Confirmation</p> :
+                                         <p className="text-gray-500 mt-2">Waiting for Player</p>
                                     )}
                                 </div>
                             </div>
