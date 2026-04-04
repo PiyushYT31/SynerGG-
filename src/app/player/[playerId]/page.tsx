@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2 } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -114,6 +114,20 @@ export default function PlayerProfilePage() {
     );
     const { data: lockedInOrg, isLoading: isOrgLoading } = useDoc<OrganizationProfile>(lockedInOrgRef);
 
+    // Check if an invite has already been sent from the current org to this player
+    const existingRequestQuery = useMemoFirebase(() => (
+      firestore && currentOrgProfile && profile
+        ? query(
+            collection(firestore, 'tryout_requests'),
+            where('organizationId', '==', currentOrgProfile.id),
+            where('playerId', '==', profile.id),
+            where('sentBy', '==', 'Org')
+          )
+        : null
+    ), [firestore, currentOrgProfile, profile]);
+    const { data: existingRequests, isLoading: isLoadingExistingRequest } = useCollection<TryoutRequest>(existingRequestQuery);
+    const hasSentInvite = existingRequests && existingRequests.length > 0;
+
   const handleInvite = async () => {
       if (!currentOrgProfile || !profile || !firestore) {
           toast({ variant: 'destructive', title: 'Cannot Invite', description: 'You must be logged in as an organization to invite players.' });
@@ -122,6 +136,11 @@ export default function PlayerProfilePage() {
 
       if (isPlayerLocked) {
           toast({ variant: 'destructive', title: 'Cannot Invite', description: `${profile.ign} is already locked in ${lockedInOrg ? lockedInOrg.name : 'a team'}.` });
+          return;
+      }
+      
+      if (hasSentInvite) {
+          toast({ title: 'Already Invited', description: 'You have already sent an invitation to this player.' });
           return;
       }
 
@@ -146,7 +165,7 @@ export default function PlayerProfilePage() {
   };
 
 
-  const isLoading = isProfileLoading || isLockedSlotLoading || isOrgLoading;
+  const isLoading = isProfileLoading || isLockedSlotLoading || isOrgLoading || isLoadingExistingRequest;
 
   if (isLoading) {
     return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -199,14 +218,25 @@ export default function PlayerProfilePage() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className="inline-block"> {/* Wrapper for disabled button */}
-                                    <Button onClick={handleInvite} disabled={isPlayerLocked}>
-                                        <UserPlus className="mr-2 h-4 w-4" /> Invite for Tryout
-                                    </Button>
+                                    {hasSentInvite ? (
+                                        <Button disabled variant="secondary">
+                                            <Check className="mr-2 h-4 w-4" /> Invite Sent!
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={handleInvite} disabled={isPlayerLocked}>
+                                            <UserPlus className="mr-2 h-4 w-4" /> Invite for Tryout
+                                        </Button>
+                                    )}
                                 </div>
                             </TooltipTrigger>
-                            {isPlayerLocked && (
+                            {isPlayerLocked && !hasSentInvite && (
                                 <TooltipContent>
                                     <p>{profile.ign} is currently locked in {lockedInOrg ? lockedInOrg.name : 'another team\'s roster'}.</p>
+                                </TooltipContent>
+                            )}
+                             {hasSentInvite && (
+                                <TooltipContent>
+                                    <p>You have already sent an invitation to {profile.ign}.</p>
                                 </TooltipContent>
                             )}
                         </Tooltip>
