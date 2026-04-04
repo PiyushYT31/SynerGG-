@@ -78,7 +78,7 @@ service cloud.firestore {
       allow list: if false;
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.id == resource.data.id;
-      allow delete: if false;
+      allow delete: if isOwner(userId);
     }
 
     // ----------------------------------------------------------------------
@@ -173,5 +173,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

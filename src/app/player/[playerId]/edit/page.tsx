@@ -337,35 +337,27 @@ export default function EditPlayerProfilePage() {
         try {
             const batch = writeBatch(firestore);
 
-            // 1. Find and update roster slots
-            const rosterSlotsQuery = query(collection(firestore, 'roster_slots'), where('playerId', '==', profile.id));
-            const rosterSlotsSnapshot = await getDocs(rosterSlotsQuery);
-            rosterSlotsSnapshot.forEach(docSnap => {
-                batch.update(docSnap.ref, {
-                    playerId: null,
-                    status: 'Vacant'
-                });
-            });
-
-            // 2. Find and delete tryout requests
+            // 1. Find and delete tryout requests this player is part of.
+            // A player is a participant, so they have permission to delete these.
             const tryoutRequestsQuery = query(collection(firestore, 'tryout_requests'), where('playerId', '==', profile.id));
             const tryoutRequestsSnapshot = await getDocs(tryoutRequestsQuery);
             tryoutRequestsSnapshot.forEach(docSnap => {
                 batch.delete(docSnap.ref);
             });
 
-            // 3. Delete player profile
+            // 2. Delete player profile
             const playerProfileRef = doc(firestore, 'player_profiles', profile.id);
             batch.delete(playerProfileRef);
 
-            // 4. Delete user document
+            // 3. Delete user document
             const userDocRef = doc(firestore, 'users', user.uid);
             batch.delete(userDocRef);
 
-            // 5. Commit all Firestore changes
+            // 4. Commit all Firestore changes
             await batch.commit();
 
-            // 6. Delete the auth user
+            // 5. Delete the auth user
+            // This should be the last step after all DB operations are successful.
             await deleteUser(user);
 
             toast({ title: 'Account Deleted', description: 'Your account and all associated data have been permanently deleted.' });
