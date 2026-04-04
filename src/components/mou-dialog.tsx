@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import { Download, Check, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface MoUDialogProps {
     request: TryoutRequest;
@@ -36,7 +37,7 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
 
         setIsProcessing(true);
         try {
-            const canvas = await html2canvas(element, { scale: 2 });
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
             const data = canvas.toDataURL('image/png');
 
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -112,10 +113,24 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                         </div>
                         <div className="space-y-4 text-sm">
                             {request.mouGeneratedAt && <p><strong>Date of Agreement:</strong> {format(new Date(request.mouGeneratedAt), 'MMMM dd, yyyy')}</p>}
-                            <p>This Memorandum of Understanding (MoU) is entered into by and between:</p>
-                            <div className="pl-4">
-                                <p><strong>The Organization:</strong> {organization.name}</p>
-                                <p><strong>The Player:</strong> {player.playerName} (In-Game Name: {player.ign})</p>
+                            <p className="text-center">This Memorandum of Understanding (MoU) is entered into by and between:</p>
+                            <div className="grid grid-cols-2 gap-8 items-start my-6">
+                                <div className="flex flex-col items-center text-center">
+                                    <Avatar className="h-24 w-24">
+                                        <AvatarImage src={organization.logoUrl} />
+                                        <AvatarFallback>{organization.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <p className="font-bold mt-2">{organization.name}</p>
+                                    <p className="text-sm text-gray-600">The Organization</p>
+                                </div>
+                                <div className="flex flex-col items-center text-center">
+                                    <Avatar className="h-24 w-24">
+                                        <AvatarImage src={player.profilePictureUrl} />
+                                        <AvatarFallback>{player.ign.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <p className="font-bold mt-2">{player.ign}</p>
+                                    <p className="text-sm text-gray-600">The Player ({player.playerName})</p>
+                                </div>
                             </div>
                             <h3 className="font-bold pt-4 text-lg">1. Purpose</h3>
                             <p>The purpose of this MoU is to establish a formal tryout and potential roster position for The Player with The Organization for the game Battlegrounds Mobile India (BGMI).</p>
