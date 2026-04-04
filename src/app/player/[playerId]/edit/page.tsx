@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { useEffect, useRef } from 'react';
+import { deleteUser } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 const formSchema = z.object({
@@ -315,6 +327,68 @@ export default function EditPlayerProfilePage() {
             }
         }
     }
+
+    async function handleDeleteAccount() {
+        if (!firestore || !user || !profile) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete account. User not found.' });
+            return;
+        }
+
+        try {
+            const batch = writeBatch(firestore);
+
+            // 1. Find and update roster slots
+            const rosterSlotsQuery = query(collection(firestore, 'roster_slots'), where('playerId', '==', profile.id));
+            const rosterSlotsSnapshot = await getDocs(rosterSlotsQuery);
+            rosterSlotsSnapshot.forEach(docSnap => {
+                batch.update(docSnap.ref, {
+                    playerId: null,
+                    status: 'Vacant'
+                });
+            });
+
+            // 2. Find and delete tryout requests
+            const tryoutRequestsQuery = query(collection(firestore, 'tryout_requests'), where('playerId', '==', profile.id));
+            const tryoutRequestsSnapshot = await getDocs(tryoutRequestsQuery);
+            tryoutRequestsSnapshot.forEach(docSnap => {
+                batch.delete(docSnap.ref);
+            });
+
+            // 3. Delete player profile
+            const playerProfileRef = doc(firestore, 'player_profiles', profile.id);
+            batch.delete(playerProfileRef);
+
+            // 4. Delete user document
+            const userDocRef = doc(firestore, 'users', user.uid);
+            batch.delete(userDocRef);
+
+            // 5. Commit all Firestore changes
+            await batch.commit();
+
+            // 6. Delete the auth user
+            await deleteUser(user);
+
+            toast({ title: 'Account Deleted', description: 'Your account and all associated data have been permanently deleted.' });
+            router.push('/');
+            router.refresh();
+
+        } catch (error: any) {
+            console.error("Error deleting account:", error);
+            if (error.code === 'auth/requires-recent-login') {
+                toast({
+                    variant: 'destructive',
+                    title: 'Authentication Error',
+                    description: 'This is a sensitive operation. Please log out and log back in before deleting your account.',
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Deletion Failed',
+                    description: error.message || 'An unknown error occurred.',
+                });
+            }
+        }
+    }
     
      const renderContent = () => {
         if (isLoading) {
@@ -366,6 +440,43 @@ export default function EditPlayerProfilePage() {
                     </CardHeader>
                     <CardContent>
                        {renderContent()}
+                       {isOwner && profile && (
+                            <div className="mt-12 pt-8 border-t border-dashed">
+                                <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
+                                <Card className="mt-4 border-destructive">
+                                    <CardHeader>
+                                        <CardTitle>Delete Account</CardTitle>
+                                        <CardDescription>
+                                            Permanently delete your account and all of its associated data. This action cannot be undone.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive">Delete My Account</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete your account, your profile, and remove all your data from our servers.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className="bg-destructive hover:bg-destructive/90"
+                                                        onClick={handleDeleteAccount}
+                                                    >
+                                                        Yes, delete my account
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
