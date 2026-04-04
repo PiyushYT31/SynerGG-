@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { doc, collection, query, where, addDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,11 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
     'IGL': <BrainCircuit className="h-4 w-4" />,
@@ -64,10 +65,23 @@ function ProfileSkeleton() {
   }
 
 export default function PlayerProfilePage() {
-  const { firestore, user } = useFirebase();
+  const { firestore, user, auth } = useFirebase();
   const params = useParams();
   const playerId = params.playerId as string;
   const { toast } = useToast();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+        await auth.signOut();
+        toast({ title: "Logged Out", description: "You have been successfully logged out." });
+        router.push('/');
+    } catch (error) {
+        console.error("Logout Error:", error);
+        toast({ variant: "destructive", title: "Logout Failed", description: "Could not log you out. Please try again." });
+    }
+  };
 
   const playerRef = useMemoFirebase(
     () => (firestore && playerId ? doc(firestore, 'player_profiles', playerId) : null),
@@ -83,6 +97,14 @@ export default function PlayerProfilePage() {
   ), [firestore, user]);
   const { data: orgProfiles } = useCollection<OrganizationProfile>(orgProfileQuery);
   const currentOrgProfile = orgProfiles?.[0] ?? null;
+
+  // Fetch current user's player profile if they are a player
+  const currentPlayerProfileQuery = useMemoFirebase(() => (
+      firestore && user ? query(collection(firestore, 'player_profiles'), where('userId', '==', user.uid)) : null
+  ), [firestore, user]);
+  const { data: currentPlayerProfiles } = useCollection<PlayerProfile>(currentPlayerProfileQuery);
+  const currentPlayerProfile = currentPlayerProfiles?.[0] ?? null;
+
 
   // Check for new requests to show notification dot
   const newRequestsQuery = useMemoFirebase(() => (
@@ -208,6 +230,22 @@ export default function PlayerProfilePage() {
                     </TooltipProvider>
                 )}
                 <Button asChild variant="outline"><Link href="/organizations">Explore Organizations</Link></Button>
+                {user && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Avatar className="cursor-pointer h-10 w-10 border-2 border-transparent hover:border-primary">
+                        <AvatarImage src={currentOrgProfile?.logoUrl || currentPlayerProfile?.profilePictureUrl} />
+                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Logout</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
             </div>
         </div>
       </header>

@@ -1,8 +1,9 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { doc, collection, query, where, addDoc } from 'firebase/firestore';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { type OrganizationProfile, type RosterSlot, type PlayerProfile, type TryoutRequest } from '@/lib/types';
@@ -10,12 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp } from 'lucide-react';
+import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp, LogOut } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
     'IGL': <BrainCircuit className="h-4 w-4" />,
@@ -187,9 +188,23 @@ function ProfileSkeleton() {
 }
 
 export default function OrganizationProfilePage() {
-    const { firestore, user } = useFirebase();
+    const { firestore, user, auth } = useFirebase();
     const params = useParams();
     const orgId = params.orgId as string;
+    const router = useRouter();
+    const { toast } = useToast();
+
+    const handleLogout = async () => {
+        if (!auth) return;
+        try {
+            await auth.signOut();
+            toast({ title: "Logged Out", description: "You have been successfully logged out." });
+            router.push('/');
+        } catch (error) {
+            console.error("Logout Error:", error);
+            toast({ variant: "destructive", title: "Logout Failed", description: "Could not log you out. Please try again." });
+        }
+    };
 
     const orgRef = useMemoFirebase(
         () => (firestore && orgId ? doc(firestore, 'organization_profiles', orgId) : null),
@@ -211,6 +226,14 @@ export default function OrganizationProfilePage() {
     ), [firestore, user]);
     const { data: playerProfiles } = useCollection<PlayerProfile>(playerProfileQuery);
     const currentPlayerProfile = playerProfiles?.[0] ?? null;
+
+    // Fetch current user's org profile (if they are an org manager)
+    const orgProfileQuery = useMemoFirebase(() => (
+        firestore && user ? query(collection(firestore, 'organization_profiles'), where('userId', '==', user.uid)) : null
+    ), [firestore, user]);
+    const { data: orgProfiles } = useCollection<OrganizationProfile>(orgProfileQuery);
+    const currentOrgProfile = orgProfiles?.[0] ?? null;
+
 
     if (isLoading) {
         return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -258,6 +281,22 @@ export default function OrganizationProfilePage() {
                             </Button>
                         )}
                         <Button asChild variant="outline"><Link href="/players">Explore Players</Link></Button>
+                        {user && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Avatar className="cursor-pointer h-10 w-10 border-2 border-transparent hover:border-primary">
+                                        <AvatarImage src={currentOrgProfile?.logoUrl || currentPlayerProfile?.profilePictureUrl} />
+                                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Logout</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
                     </div>
                 </div>
             </header>
