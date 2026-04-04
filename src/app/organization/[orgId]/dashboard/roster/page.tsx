@@ -19,6 +19,7 @@ import { PlusCircle, Edit, Trash2, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const ROLES = ['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute'];
 const PLAYSTYLES = ['Aggressive', 'Tactical', 'Balanced', 'Passive'];
@@ -150,7 +151,7 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
     };
 
     const handleDelete = async () => {
-        if (!firestore || !confirm('Are you sure you want to delete this slot? This action is permanent.')) return;
+        if (!firestore) return;
 
         setIsSubmitting(true);
         const slotDocRef = doc(firestore, 'roster_slots', slot.id);
@@ -201,7 +202,28 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
             <span className="font-semibold">Player:</span>
             {isPlayerLoading ? <Skeleton className="h-4 w-24" /> : player ? <span>{player.ign}</span> : <span className="text-muted-foreground">N/A</span>}
         </div>
-         <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isSubmitting}><Trash2 className="mr-2 h-4 w-4"/> Delete Slot</Button>
+         <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isSubmitting}><Trash2 className="mr-2 h-4 w-4"/> Delete Slot</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will permanently delete the '{slot.slotName}' slot. This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        className="bg-destructive hover:bg-destructive/90"
+                        onClick={handleDelete}
+                    >
+                        Yes, delete slot
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
