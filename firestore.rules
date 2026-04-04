@@ -171,5 +171,31 @@ service cloud.firestore {
       allow update: if isTryoutParticipant(resource.data) && isExistingDoc();
       allow delete: if isTryoutParticipant(resource.data) && isExistingDoc();
     }
+    
+    // ----------------------------------------------------------------------
+    // VOD Review Comment Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Comments on VODs. Writable only by org managers. Readable by the player and the commenting org.
+     * @path /vod_review_comments/{commentId}
+     */
+    match /vod_review_comments/{commentId} {
+      // Helper to check if user is the player of the VOD
+      function isVodPlayer(doc) {
+        let playerProfile = get(/databases/$(database)/documents/player_profiles/$(doc.playerId)).data;
+        return isOwner(playerProfile.userId);
+      }
+      
+      // Helper to check if user is the org manager who wrote the comment
+      function isCommentOwner(doc) {
+        return isOwner(doc.organizationManagerUserId);
+      }
+
+      allow get: if isVodPlayer(resource.data) || isCommentOwner(resource.data);
+      allow list: if isSignedIn(); // Allows querying by playerId or orgId
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.organizationManagerUserId;
+      allow update, delete: if isCommentOwner(resource.data);
+    }
   }
 }

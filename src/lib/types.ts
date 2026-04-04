@@ -2,6 +2,20 @@ export type PlayerRole = 'IGL' | 'Entry Fragger' | 'Support' | 'Assaulter' | 'Sn
 export type Playstyle = 'Aggressive' | 'Tactical' | 'Balanced' | 'Passive';
 export type Device = 'iOS' | 'Android';
 
+export interface PlayerStats {
+  assaulting: number;
+  igling: number;
+  support: number;
+  survival: number;
+  sniping: number;
+}
+
+export interface PovLink {
+    id: string;
+    name: string;
+    url: string;
+}
+
 export interface PlayerProfile {
   id: string;
   userId: string;
@@ -13,11 +27,12 @@ export interface PlayerProfile {
   role: PlayerRole;
   experience: string;
   fdRatio: number;
-  povLinks: { name: string; url: string; }[];
+  povLinks: PovLink[];
   idealTeammateStrategy: string;
   playstyle: Playstyle;
   device: Device;
   achievements: string[];
+  playerStats?: PlayerStats;
   createdAt: string;
   updatedAt: string;
   profilePictureUrl?: string;
@@ -76,4 +91,13 @@ export interface TryoutRequest {
     mouOrgConfirmedAt?: string;
 }
 
-    
+export interface VODReviewComment {
+    id: string;
+    povId: string;
+    playerId: string;
+    organizationId: string;
+    organizationManagerUserId: string;
+    timestamp: string;
+    comment: string;
+    createdAt: string;
+}

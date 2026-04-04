@@ -10,12 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PlayerRadarChart } from '@/components/player-radar-chart';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
     'IGL': <BrainCircuit className="h-4 w-4" />,
@@ -317,6 +318,14 @@ export default function PlayerProfilePage() {
                                 </CardContent>
                             </Card>
                         )}
+                         {profile.playerStats && (
+                            <Card>
+                                <CardHeader><CardTitle className="font-headline flex items-center gap-2"><BarChart /> Player Skills</CardTitle></CardHeader>
+                                <CardContent className="h-80">
+                                    <PlayerRadarChart stats={profile.playerStats} />
+                                </CardContent>
+                            </Card>
+                        )}
                         <Card>
                             <CardHeader><CardTitle className="font-headline flex items-center gap-2"><FileText /> Experience</CardTitle></CardHeader>
                             <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{profile.experience}</p></CardContent>
@@ -346,10 +355,10 @@ export default function PlayerProfilePage() {
                                 <CardContent className="space-y-2">
                                     {profile.povLinks.map((link, i) => (
                                         <Button asChild variant="outline" className="w-full justify-start" key={i}>
-                                            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                            <Link href={`/player/${profile.id}/vod/${link.id}`}>
                                                 <Link2 className="mr-2 h-4 w-4" />
                                                 {link.name}
-                                            </a>
+                                            </Link>
                                         </Button>
                                     ))}
                                 </CardContent>

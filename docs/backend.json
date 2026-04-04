@@ -103,6 +103,9 @@
           "items": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string"
+              },
               "name": {
                 "type": "string"
               },
@@ -112,6 +115,7 @@
               }
             },
             "required": [
+              "id",
               "name",
               "url"
             ]
@@ -147,6 +151,32 @@
             "type": "string"
           }
         },
+        "playerStats": {
+          "type": "object",
+          "description": "Player's self-assessed skill ratings for radar chart visualization.",
+          "properties": {
+            "assaulting": {
+              "type": "number",
+              "description": "Skill in direct combat and entry fragging."
+            },
+            "igling": {
+              "type": "number",
+              "description": "Skill in in-game leading and strategy."
+            },
+            "support": {
+              "type": "number",
+              "description": "Skill in supporting teammates."
+            },
+            "survival": {
+              "type": "number",
+              "description": "Skill in survival and positioning."
+            },
+            "sniping": {
+              "type": "number",
+              "description": "Skill in long-range sniping."
+            }
+          }
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp when the player profile was created.",
@@ -172,7 +202,8 @@
         "idealTeammateStrategy",
         "playstyle",
         "device",
-        "createdAt"
+        "createdAt",
+        "playerStats"
       ]
     },
     "OrganizationProfile": {
@@ -199,9 +230,9 @@
           "format": "uri"
         },
         "bannerUrl": {
-            "type": "string",
-            "description": "URL for the organization's profile banner image.",
-            "format": "uri"
+          "type": "string",
+          "description": "URL for the organization's profile banner image.",
+          "format": "uri"
         },
         "socialLinks": {
           "type": "array",
@@ -430,6 +461,50 @@
         "sentBy",
         "sentAt"
       ]
+    },
+    "VODReviewComment": {
+      "title": "VOD Review Comment",
+      "type": "object",
+      "description": "A timestamped comment left by an organization on a player's VOD.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "povId": {
+          "type": "string",
+          "description": "The ID of the povLink this comment belongs to."
+        },
+        "playerId": {
+          "type": "string"
+        },
+        "organizationId": {
+          "type": "string"
+        },
+        "organizationManagerUserId": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp in format mm:ss."
+        },
+        "comment": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "povId",
+        "playerId",
+        "organizationId",
+        "organizationManagerUserId",
+        "timestamp",
+        "comment",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -516,6 +591,22 @@
             {
               "name": "tryoutRequestId",
               "description": "The unique identifier for a specific tryout request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/vod_review_comments/{commentId}",
+        "definition": {
+          "entityName": "VODReviewComment",
+          "schema": {
+            "$ref": "#/backend/entities/VODReviewComment"
+          },
+          "description": "Stores timestamped comments from organizations on a player's VODs. Writable only by the commenting organization manager. Readable by the player and the commenting organization.",
+          "params": [
+            {
+              "name": "commentId",
+              "description": "The unique identifier for a specific VOD review comment."
             }
           ]
         }
