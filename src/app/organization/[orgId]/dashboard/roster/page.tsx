@@ -155,7 +155,7 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
         const slotDocRef = doc(firestore, 'roster_slots', slot.id);
         
         try {
-            await deleteDoc(slotDocRef)
+            await deleteDoc(slotDocRef);
             toast({ title: 'Success', description: 'Roster slot has been permanently deleted.' });
         } catch (serverError) {
             const permissionError = new FirestorePermissionError({
@@ -237,7 +237,6 @@ export default function RosterManagementPage() {
       .then(() => {
         toast({ title: 'Success', description: 'New roster slot created.' });
         setIsDialogOpen(false);
-        form.reset();
       })
       .catch((serverError) => {
         const permissionError = new FirestorePermissionError({
