@@ -403,6 +403,21 @@
         "isReadByOrg": {
           "type": "boolean",
           "description": "Indicates if the org manager has viewed an incoming application. Used for notifications."
+        },
+        "mouGeneratedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the MoU was generated after the request was accepted."
+        },
+        "mouPlayerConfirmedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the player confirmed the MoU."
+        },
+        "mouOrgConfirmedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the organization confirmed the MoU."
         }
       },
       "required": [
@@ -509,4 +524,3 @@
     "reasoning": "The proposed Firestore structure prioritizes security, scalability, and debuggability by adhering to the core design principles, especially Authorization Independence and Structural Segregation. Each entity is placed in its own top-level collection, ensuring homogeneous security postures within collections and simplifying security rules.\\n\\n**Authorization Independence:** This is achieved through strategic denormalization. For documents whose access depends on a 'parent' or related entity's owner, the owner's `userId` is explicitly copied into the document. For instance:\\n*   `PlayerProfile` documents will include the `userId` of the owning `User`.\\n*   `OrganizationProfile` documents will include the `userId` of the owning `User`.\\n*   `RosterSlot` documents, which are owned by an organization, will denormalize the `userId` of the `OrganizationProfile`'s manager (renamed to `organizationManagerUserId` for clarity) directly into the `RosterSlot` document. This allows rules to check `request.auth.uid == resource.data.organizationManagerUserId` without needing to perform a `get()` operation on the parent `OrganizationProfile` document.\\n*   `TryoutRequest` documents involve both a player and an organization. To allow both parties to manage the request independently, both the `userId` of the player (`playerUserId`) and the `userId` of the organization's manager (`organizationManagerUserId`) are denormalized into each `TryoutRequest` document. This eliminates complex `get()` calls and facilitates atomic updates.\\n\\n**Support for Query-Aware Permissions (QAPs):** The structural segregation inherently supports QAPs by separating data with different access requirements:\\n*   `/player_profiles` and `/organization_profiles` collections are designed to be globally readable (for discovery by organizations and players, respectively) but write-restricted to their respective owners. This allows efficient `list` operations (e.g., 'show all players an Org can recruit', 'show all Orgs a player can apply to') without needing complex rule-based filtering, as the read permission is broad and the write permission is specific.\\n*   `/roster_slots` and `/tryout_requests` collections contain data that is private to the involved parties. By denormalizing the owner `userId`s, `list` operations on these collections can efficiently filter by `userId` (e.g., `db.collection('roster_slots').where('organizationManagerUserId', '==', currentUser.uid)`) and security rules can strictly enforce that only the `currentUser.uid` can access their specific documents.\\n\\nThis design minimizes rule complexity, prevents waterfall `get()` operations, and ensures that data integrity and security are maintained efficiently across all read and write operations."
   }
 }
-    

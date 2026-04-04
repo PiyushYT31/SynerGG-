@@ -9,17 +9,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatDistanceToNow } from 'date-fns';
-import { Check, X, ArrowLeft, Mail, LogOut, ArrowRight } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { Check, X, ArrowLeft, Mail, LogOut, ArrowRight, FileSignature, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Badge } from '@/components/ui/badge';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { MoUDialog } from '@/components/mou-dialog';
+
 
 // Component to show Organization Info for a request
 function OrgInfo({ orgId }: { orgId: string }) {
     const { firestore } = useFirebase();
-    const orgRef = useMemoFirebase(() => doc(firestore, 'organization_profiles', orgId), [firestore, orgId]);
+    const orgRef = useMemoFirebase(() => firestore ? doc(firestore, 'organization_profiles', orgId) : null, [firestore, orgId]);
     const { data: org, isLoading } = useDoc<OrganizationProfile>(orgRef);
 
     if (isLoading) return <Skeleton className="h-10 w-32" />;
@@ -40,10 +42,14 @@ function OrgInfo({ orgId }: { orgId: string }) {
 }
 
 // Card for an incoming invitation from an org
-function InvitationCard({ request }: { request: TryoutRequest }) {
+function InvitationCard({ request, playerProfile }: { request: TryoutRequest; playerProfile: PlayerProfile }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isMouOpen, setIsMouOpen] = useState(false);
+
+    const orgRef = useMemoFirebase(() => firestore ? doc(firestore, 'organization_profiles', request.organizationId) : null, [firestore, request.organizationId]);
+    const {data: organization} = useDoc<OrganizationProfile>(orgRef);
 
     const handleResponse = (status: 'Accepted' | 'Declined') => {
         if (!firestore) return;
@@ -52,6 +58,7 @@ function InvitationCard({ request }: { request: TryoutRequest }) {
         const updatedData = {
             status,
             respondedAt: new Date().toISOString(),
+            ...(status === 'Accepted' && { mouGeneratedAt: new Date().toISOString() })
         };
 
         updateDoc(requestRef, updatedData)
@@ -73,35 +80,69 @@ function InvitationCard({ request }: { request: TryoutRequest }) {
     };
     
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <OrgInfo orgId={request.organizationId} />
-                <p className="text-sm text-muted-foreground">{formatDistanceToNow(new Date(request.sentAt), { addSuffix: true })}</p>
-            </CardHeader>
-            <CardContent>
-                {request.message && (
-                    <blockquote className="mt-2 border-l-2 pl-6 italic text-muted-foreground">
-                        {request.message}
-                    </blockquote>
-                )}
-                 <div className="mt-4 flex gap-2">
-                    <Button onClick={() => handleResponse('Accepted')} disabled={isProcessing} size="sm">
-                        <Check className="mr-2 h-4 w-4" /> Accept
-                    </Button>
-                    <Button onClick={() => handleResponse('Declined')} disabled={isProcessing} size="sm" variant="destructive">
-                        <X className="mr-2 h-4 w-4" /> Decline
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
+        <>
+            {organization && request.status === 'Accepted' && (
+                <MoUDialog 
+                    request={request}
+                    player={playerProfile}
+                    organization={organization}
+                    open={isMouOpen}
+                    onOpenChange={setIsMouOpen}
+                    currentUserType="player"
+                />
+            )}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <OrgInfo orgId={request.organizationId} />
+                     <div className="text-right">
+                        <p className="text-sm text-muted-foreground">{formatDistanceToNow(new Date(request.sentAt), { addSuffix: true })}</p>
+                        <Badge variant={request.status === 'Pending' ? 'default' : request.status === 'Accepted' ? 'secondary' : 'destructive'} className="mt-1">{request.status}</Badge>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {request.message && (
+                        <blockquote className="mt-2 border-l-2 pl-6 italic text-muted-foreground">
+                            {request.message}
+                        </blockquote>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {request.status === 'Pending' && (
+                            <>
+                                <Button onClick={() => handleResponse('Accepted')} disabled={isProcessing} size="sm">
+                                    <Check className="mr-2 h-4 w-4" /> Accept
+                                </Button>
+                                <Button onClick={() => handleResponse('Declined')} disabled={isProcessing} size="sm" variant="destructive">
+                                    <X className="mr-2 h-4 w-4" /> Decline
+                                </Button>
+                            </>
+                        )}
+                        {request.status === 'Accepted' && request.mouGeneratedAt && (
+                            <Button onClick={() => setIsMouOpen(true)} size="sm" variant="outline">
+                                <FileSignature className="mr-2" /> 
+                                {request.mouPlayerConfirmedAt ? 'View Confirmed MoU' : 'View & Confirm MoU'}
+                            </Button>
+                        )}
+                    </div>
+                     {request.mouPlayerConfirmedAt && (
+                        <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
+                            <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}.
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
+        </>
     )
 }
 
 // Card for an outgoing application to an org
-function ApplicationCard({ request }: { request: TryoutRequest }) {
+function ApplicationCard({ request, playerProfile }: { request: TryoutRequest; playerProfile: PlayerProfile }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isMouOpen, setIsMouOpen] = useState(false);
+
+    const orgRef = useMemoFirebase(() => firestore ? doc(firestore, 'organization_profiles', request.organizationId) : null, [firestore, request.organizationId]);
+    const {data: organization} = useDoc<OrganizationProfile>(orgRef);
 
     const handleWithdraw = () => {
         if (!firestore || !confirm('Are you sure you want to withdraw this application?')) return;
@@ -132,24 +173,47 @@ function ApplicationCard({ request }: { request: TryoutRequest }) {
     };
     
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <OrgInfo orgId={request.organizationId} />
-                <div className="text-right">
-                    <p className="text-sm text-muted-foreground">{formatDistanceToNow(new Date(request.sentAt), { addSuffix: true })}</p>
-                    <Badge variant={request.status === 'Pending' ? 'default' : request.status === 'Accepted' ? 'secondary' : request.status === 'Declined' ? 'destructive' : 'outline'} className="mt-1">{request.status}</Badge>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 <div className="mt-4 flex gap-2">
-                    {request.status === 'Pending' && (
-                        <Button onClick={handleWithdraw} disabled={isProcessing} size="sm" variant="destructive">
-                            <LogOut className="mr-2 h-4 w-4" /> Withdraw
-                        </Button>
+        <>
+             {organization && request.status === 'Accepted' && (
+                <MoUDialog 
+                    request={request}
+                    player={playerProfile}
+                    organization={organization}
+                    open={isMouOpen}
+                    onOpenChange={setIsMouOpen}
+                    currentUserType="player"
+                />
+            )}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <OrgInfo orgId={request.organizationId} />
+                    <div className="text-right">
+                        <p className="text-sm text-muted-foreground">{formatDistanceToNow(new Date(request.sentAt), { addSuffix: true })}</p>
+                        <Badge variant={request.status === 'Pending' ? 'default' : request.status === 'Accepted' ? 'secondary' : request.status === 'Declined' ? 'destructive' : 'outline'} className="mt-1">{request.status}</Badge>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {request.status === 'Pending' && (
+                            <Button onClick={handleWithdraw} disabled={isProcessing} size="sm" variant="destructive">
+                                <LogOut className="mr-2 h-4 w-4" /> Withdraw
+                            </Button>
+                        )}
+                        {request.status === 'Accepted' && request.mouGeneratedAt && (
+                             <Button onClick={() => setIsMouOpen(true)} size="sm" variant="outline">
+                                <FileSignature className="mr-2" /> 
+                                {request.mouPlayerConfirmedAt ? 'View Confirmed MoU' : 'View & Confirm MoU'}
+                            </Button>
+                        )}
+                    </div>
+                    {request.mouPlayerConfirmedAt && (
+                        <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
+                            <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}.
+                        </p>
                     )}
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </>
     )
 }
 
@@ -172,7 +236,7 @@ export default function MyRequestsPage() {
 
     const isLoading = isUserLoading || isPlayerLoading || areRequestsLoading;
     
-    const incomingRequests = allRequests?.filter(r => r.sentBy === 'Org' && r.status === 'Pending') ?? [];
+    const incomingRequests = allRequests?.filter(r => r.sentBy === 'Org') ?? [];
     const outgoingRequests = allRequests?.filter(r => r.sentBy === 'Player') ?? [];
 
     useEffect(() => {
@@ -241,12 +305,12 @@ export default function MyRequestsPage() {
                     <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2"><Mail /> Incoming Invitations</h2>
                     {incomingRequests.length > 0 ? (
                         <div className="space-y-4">
-                            {incomingRequests.map(req => <InvitationCard key={req.id} request={req} />)}
+                            {incomingRequests.map(req => <InvitationCard key={req.id} request={req} playerProfile={currentPlayerProfile} />)}
                         </div>
                     ) : (
                         <Card className="text-center py-12">
-                            <CardHeader><CardTitle>No Pending Invitations</CardTitle></CardHeader>
-                            <CardContent><p>You currently have no new invitations from organizations.</p></CardContent>
+                            <CardHeader><CardTitle>No Invitations</CardTitle></CardHeader>
+                            <CardContent><p>You currently have no invitations from organizations.</p></CardContent>
                         </Card>
                     )}
                 </div>
@@ -255,7 +319,7 @@ export default function MyRequestsPage() {
                     <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2"><ArrowRight /> My Applications</h2>
                      {outgoingRequests.length > 0 ? (
                         <div className="space-y-4">
-                            {outgoingRequests.map(req => <ApplicationCard key={req.id} request={req} />)}
+                            {outgoingRequests.map(req => <ApplicationCard key={req.id} request={req} playerProfile={currentPlayerProfile} />)}
                         </div>
                     ) : (
                         <Card className="text-center py-12">

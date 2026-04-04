@@ -71,6 +71,9 @@ export interface TryoutRequest {
     respondedAt?: string;
     isReadByPlayer?: boolean;
     isReadByOrg?: boolean;
+    mouGeneratedAt?: string;
+    mouPlayerConfirmedAt?: string;
+    mouOrgConfirmedAt?: string;
 }
 
     
