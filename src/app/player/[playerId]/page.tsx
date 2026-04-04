@@ -92,6 +92,14 @@ export default function PlayerProfilePage() {
   const { data: lockedSlots, isLoading: isLockedSlotLoading } = useCollection(lockedSlotQuery);
   const isPlayerLocked = !!lockedSlots && lockedSlots.length > 0;
 
+    // If player is locked, get the organization they are locked in
+    const lockedInOrgId = lockedSlots?.[0]?.organizationId;
+    const lockedInOrgRef = useMemoFirebase(
+        () => (firestore && lockedInOrgId ? doc(firestore, 'organization_profiles', lockedInOrgId) : null),
+        [firestore, lockedInOrgId]
+    );
+    const { data: lockedInOrg, isLoading: isOrgLoading } = useDoc<OrganizationProfile>(lockedInOrgRef);
+
   const handleInvite = async () => {
       if (!currentOrgProfile || !profile || !firestore) {
           toast({ variant: 'destructive', title: 'Cannot Invite', description: 'You must be logged in as an organization to invite players.' });
@@ -99,7 +107,7 @@ export default function PlayerProfilePage() {
       }
 
       if (isPlayerLocked) {
-          toast({ variant: 'destructive', title: 'Cannot Invite', description: `${profile.ign} is already locked in a team.` });
+          toast({ variant: 'destructive', title: 'Cannot Invite', description: `${profile.ign} is already locked in ${lockedInOrg ? lockedInOrg.name : 'a team'}.` });
           return;
       }
 
@@ -123,7 +131,7 @@ export default function PlayerProfilePage() {
   };
 
 
-  const isLoading = isProfileLoading || isLockedSlotLoading;
+  const isLoading = isProfileLoading || isLockedSlotLoading || isOrgLoading;
 
   if (isLoading) {
     return <div className="bg-background min-h-screen"><ProfileSkeleton /></div>;
@@ -184,7 +192,7 @@ export default function PlayerProfilePage() {
                             </TooltipTrigger>
                             {isPlayerLocked && (
                                 <TooltipContent>
-                                    <p>{profile.ign} is currently locked in another team's roster.</p>
+                                    <p>{profile.ign} is currently locked in {lockedInOrg ? lockedInOrg.name : 'another team\'s roster'}.</p>
                                 </TooltipContent>
                             )}
                         </Tooltip>
@@ -209,7 +217,7 @@ export default function PlayerProfilePage() {
                             {isPlayerLocked && (
                                 <Badge variant="destructive" className="gap-2 text-base py-1 px-3">
                                     <Lock className="h-4 w-4" />
-                                    Locked
+                                    Locked in {lockedInOrg ? <Link href={`/organization/${lockedInOrg.id}`} className="hover:underline">{lockedInOrg.name}</Link> : 'a team'}
                                 </Badge>
                             )}
                         </CardTitle>
