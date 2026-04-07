@@ -261,13 +261,13 @@ export default function PlayerSignUp() {
                                                 mode="single"
                                                 selected={field.value}
                                                 onSelect={(date) => {
-                                                    field.onChange(date);
+                                                    if(date) field.onChange(date);
                                                     setIsCalendarOpen(false);
                                                 }}
                                                 disabled={(date) =>
                                                 date > new Date() || date < new Date("1900-01-01")
                                                 }
-                                                captionLayout="dropdown"
+                                                captionLayout="dropdown-buttons"
                                                 fromYear={1960}
                                                 toYear={new Date().getFullYear()}
                                                 initialFocus
