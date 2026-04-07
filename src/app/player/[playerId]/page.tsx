@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { doc, collection, query, where, addDoc } from 'firebase/firestore';
 import Link from 'next/link';
+import { format } from 'date-fns';
 
 import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { type PlayerProfile, type OrganizationProfile, type TryoutRequest } from '@/lib/types';
@@ -10,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart, Cake } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -347,6 +348,12 @@ export default function PlayerProfilePage() {
                                    <Fingerprint className="h-5 w-5 text-muted-foreground" />
                                    <span>{profile.bgmiUid} (UID)</span>
                                </div>
+                               {profile.dateOfBirth && (
+                                <div className="flex items-center gap-3">
+                                    <Cake className="h-5 w-5 text-muted-foreground" />
+                                    <span>{format(new Date(profile.dateOfBirth), 'MMMM dd, yyyy')}</span>
+                                </div>
+                               )}
                            </CardContent>
                         </Card>
                          {profile.povLinks && profile.povLinks.length > 0 && (
@@ -385,3 +392,5 @@ export default function PlayerProfilePage() {
     </div>
   );
 }
+
+    

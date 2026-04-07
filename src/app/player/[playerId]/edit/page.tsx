@@ -8,6 +8,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { useRef, useEffect } from 'react';
 import { deleteUser } from 'firebase/auth';
+import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -172,6 +173,18 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                             </FormItem>
                         )}
                     />
+                    <FormItem>
+                        <FormLabel>Date of Birth</FormLabel>
+                        <FormControl>
+                            <Input
+                            value={profile.dateOfBirth ? format(new Date(profile.dateOfBirth), "PPP") : 'Not set'}
+                            disabled
+                            />
+                        </FormControl>
+                        <FormDescription>
+                            Date of birth cannot be changed.
+                        </FormDescription>
+                    </FormItem>
                     <FormField
                         control={form.control}
                         name="fdRatio"
@@ -372,7 +385,7 @@ export default function EditPlayerProfilePage() {
             };
         }) || [];
 
-        const updatedData = {
+        const updatedData: Omit<FormValues, 'povLinks' | 'achievements'> & { achievements: string[], povLinks: any[], playerStats: any, updatedAt: string } = {
             ...values,
             achievements: achievementsArray,
             povLinks: povLinksArray,
@@ -387,7 +400,7 @@ export default function EditPlayerProfilePage() {
         };
 
         try {
-            await updateDoc(playerDocRef, updatedData);
+            await updateDoc(playerDocRef, updatedData as any);
             toast({ title: 'Profile Updated', description: 'Your changes have been saved successfully.' });
             router.push(`/player/${playerId}`);
             router.refresh();
@@ -562,3 +575,5 @@ export default function EditPlayerProfilePage() {
         </div>
     );
 }
+
+    

@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, addDoc } from 'firebase/firestore';
+import { format, subYears } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +30,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   playerName: z.string().min(2, { message: 'Player name must be at least 2 characters.' }),
@@ -35,6 +40,13 @@ const formSchema = z.object({
   phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number.' }),
   ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
   bgmiUid: z.string().min(5, { message: 'Please enter a valid BGMI UID.' }),
+  dateOfBirth: z.date({
+    required_error: "A date of birth is required.",
+  }).refine((date) => {
+    return date <= subYears(new Date(), 16);
+  }, {
+    message: "You must be at least 16 years old to sign up.",
+  }),
   role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
@@ -68,6 +80,7 @@ export default function PlayerSignUp() {
       phoneNumber: '',
       ign: '',
       bgmiUid: '',
+      dateOfBirth: undefined,
       experience: '',
       idealTeammateStrategy: '',
       password: '',
@@ -107,6 +120,7 @@ export default function PlayerSignUp() {
             phoneNumber: values.phoneNumber,
             ign: values.ign,
             bgmiUid: values.bgmiUid,
+            dateOfBirth: values.dateOfBirth.toISOString(),
             role: values.role,
             device: values.device,
             fdRatio: values.fdRatio,
@@ -226,6 +240,53 @@ export default function PlayerSignUp() {
                                         </FormItem>
                                     )}
                                 />
+                                <FormField
+                                    control={form.control}
+                                    name="dateOfBirth"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-col pt-2">
+                                        <FormLabel>Date of Birth</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "w-full pl-3 text-left font-normal",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                                >
+                                                {field.value ? (
+                                                    format(field.value, "PPP")
+                                                ) : (
+                                                    <span>Pick a date</span>
+                                                )}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value}
+                                                onSelect={field.onChange}
+                                                disabled={(date) =>
+                                                date > new Date() || date < new Date("1900-01-01")
+                                                }
+                                                captionLayout="dropdown-buttons"
+                                                fromYear={1960}
+                                                toYear={new Date().getFullYear()}
+                                                initialFocus
+                                            />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormDescription>
+                                            You must be at least 16 years old.
+                                        </FormDescription>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
                                  <FormField
                                     control={form.control}
                                     name="role"
@@ -436,3 +497,5 @@ export default function PlayerSignUp() {
     </div>
   );
 }
+
+    

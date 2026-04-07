@@ -24,6 +24,7 @@ export interface PlayerProfile {
   phoneNumber: string;
   ign: string;
   bgmiUid: string;
+  dateOfBirth: string;
   role: PlayerRole;
   experience: string;
   fdRatio: number;
@@ -101,3 +102,5 @@ export interface VODReviewComment {
     comment: string;
     createdAt: string;
 }
+
+    
