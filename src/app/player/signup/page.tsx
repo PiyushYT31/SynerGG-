@@ -266,7 +266,7 @@ export default function PlayerSignUp() {
                                                 disabled={(date) =>
                                                 date > new Date() || date < new Date("1900-01-01")
                                                 }
-                                                captionLayout="dropdown"
+                                                captionLayout="dropdown-buttons"
                                                 fromYear={1960}
                                                 toYear={new Date().getFullYear()}
                                                 initialFocus
