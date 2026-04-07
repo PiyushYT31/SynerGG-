@@ -119,6 +119,7 @@ export default function PlayerSignUp() {
             idealTeammateStrategy: values.idealTeammateStrategy,
             achievements: [],
             povLinks: [],
+            socialLinks: [],
             playerStats: {
                 assaulting: 50,
                 igling: 50,
@@ -266,7 +267,7 @@ export default function PlayerSignUp() {
                                                 disabled={(date) =>
                                                 date > new Date() || date < new Date("1900-01-01")
                                                 }
-                                                captionLayout="dropdown-buttons"
+                                                captionLayout="dropdown"
                                                 fromYear={1960}
                                                 toYear={new Date().getFullYear()}
                                                 initialFocus
