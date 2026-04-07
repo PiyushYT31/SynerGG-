@@ -16,6 +16,12 @@ export interface PovLink {
     url: string;
 }
 
+export interface SocialLink {
+    id: string;
+    name: 'youtube' | 'instagram' | 'twitter';
+    url: string;
+}
+
 export interface PlayerProfile {
   id: string;
   userId: string;
@@ -37,6 +43,7 @@ export interface PlayerProfile {
   createdAt: string;
   updatedAt: string;
   profilePictureUrl?: string;
+  socialLinks?: SocialLink[];
 }
 
 export interface OrganizationProfile {
@@ -45,7 +52,7 @@ export interface OrganizationProfile {
   name: string;
   logoUrl?: string;
   bannerUrl?: string;
-  socialLinks?: string[];
+  socialLinks?: SocialLink[];
   achievements?: string[];
   teamStyle?: string;
   description?: string;

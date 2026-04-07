@@ -126,6 +126,35 @@
             ]
           }
         },
+        "socialLinks": {
+          "type": "array",
+          "description": "A list of links to the player's social media profiles.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "enum": [
+                  "youtube",
+                  "instagram",
+                  "twitter"
+                ]
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "url"
+            ]
+          }
+        },
         "idealTeammateStrategy": {
           "type": "string",
           "description": "A detailed description of the player's ideal teammates and desired playstyle for synergy matching (e.g., 'I need an IGL who plays center-zone')."
@@ -242,9 +271,31 @@
         },
         "socialLinks": {
           "type": "array",
-          "description": "An array of URLs to the organization's social media profiles.",
+          "description": "A list of links to the organization's social media profiles.",
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "enum": [
+                  "youtube",
+                  "instagram",
+                  "twitter"
+                ]
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "url"
+            ]
           }
         },
         "achievements": {

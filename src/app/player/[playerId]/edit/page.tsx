@@ -57,6 +57,7 @@ const formSchema = z.object({
   idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
   achievements: z.string().optional(),
   povLinks: z.string().optional(),
+  socialLinks: z.string().optional(),
   assaulting: z.number().min(0).max(100),
   igling: z.number().min(0).max(100),
   support: z.number().min(0).max(100),
@@ -77,6 +78,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
             idealTeammateStrategy: '',
             achievements: '',
             povLinks: '',
+            socialLinks: '',
             fdRatio: 0,
             role: undefined,
             playstyle: undefined,
@@ -97,6 +99,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                 idealTeammateStrategy: profile.idealTeammateStrategy || '',
                 achievements: profile.achievements?.join('\n') || '',
                 povLinks: profile.povLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
+                socialLinks: profile.socialLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
                 fdRatio: profile.fdRatio || 0,
                 role: profile.role,
                 playstyle: profile.playstyle,
@@ -255,6 +258,20 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                      <div className="md:col-span-2">
                         <FormField
                             control={form.control}
+                            name="socialLinks"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Social Media Links</FormLabel>
+                                    <FormControl><Textarea placeholder={"youtube,https://youtube.com/...\ninstagram,https://instagram.com/..."} {...field} rows={3}/></FormControl>
+                                    <FormDescription>Enter one link per line, with the platform (youtube, instagram, twitter) and URL separated by a comma.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                     <div className="md:col-span-2">
+                        <FormField
+                            control={form.control}
                             name="experience"
                             render={({ field }) => (
                                 <FormItem>
@@ -384,11 +401,22 @@ export default function EditPlayerProfilePage() {
                 url: url 
             };
         }) || [];
+        const socialLinksArray = values.socialLinks?.split('\n').filter(line => line.trim() !== '' && line.includes(',')).map(line => {
+            const [name, ...urlParts] = line.split(',');
+            const url = urlParts.join(',').trim();
+            const existingLink = profile.socialLinks?.find(l => l.url === url);
+            return { 
+                id: existingLink?.id || crypto.randomUUID(),
+                name: name.trim().toLowerCase(), 
+                url: url 
+            };
+        }) || [];
 
-        const updatedData: Omit<FormValues, 'povLinks' | 'achievements'> & { achievements: string[], povLinks: any[], playerStats: any, updatedAt: string } = {
+        const updatedData: Omit<FormValues, 'povLinks' | 'achievements' | 'socialLinks'> & { achievements: string[], povLinks: any[], socialLinks: any[], playerStats: any, updatedAt: string } = {
             ...values,
             achievements: achievementsArray,
             povLinks: povLinksArray,
+            socialLinks: socialLinksArray,
             playerStats: {
                 assaulting: values.assaulting,
                 igling: values.igling,

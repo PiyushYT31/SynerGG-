@@ -29,7 +29,6 @@ import { useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -55,11 +54,6 @@ const formSchema = z.object({
   idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
-  assaulting: z.number().min(0).max(100),
-  igling: z.number().min(0).max(100),
-  support: z.number().min(0).max(100),
-  survival: z.number().min(0).max(100),
-  sniping: z.number().min(0).max(100),
 }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
@@ -89,11 +83,6 @@ export default function PlayerSignUp() {
       role: undefined,
       playstyle: undefined,
       device: undefined,
-      assaulting: 50,
-      igling: 50,
-      support: 50,
-      survival: 50,
-      sniping: 50,
     },
   });
 
@@ -130,11 +119,11 @@ export default function PlayerSignUp() {
             achievements: [],
             povLinks: [],
             playerStats: {
-                assaulting: values.assaulting,
-                igling: values.igling,
-                support: values.support,
-                survival: values.survival,
-                sniping: values.sniping,
+                assaulting: 50,
+                igling: 50,
+                support: 50,
+                survival: 50,
+                sniping: 50,
             },
             profilePictureUrl: '',
             createdAt: new Date().toISOString(),
@@ -383,60 +372,6 @@ export default function PlayerSignUp() {
                                 />
                                 </div>
 
-                                <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
-                                     <h3 className="text-lg font-medium">Rate Your Skills</h3>
-                                     <FormField
-                                        control={form.control}
-                                        name="assaulting"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Assaulting ({field.value})</FormLabel>
-                                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} defaultValue={[field.value]} max={100} step={1} /></FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                     <FormField
-                                        control={form.control}
-                                        name="igling"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>IGLing ({field.value})</FormLabel>
-                                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} defaultValue={[field.value]} max={100} step={1} /></FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="support"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Support ({field.value})</FormLabel>
-                                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} defaultValue={[field.value]} max={100} step={1} /></FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="survival"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Survival/Positioning ({field.value})</FormLabel>
-                                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} defaultValue={[field.value]} max={100} step={1} /></FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="sniping"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Sniping ({field.value})</FormLabel>
-                                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} defaultValue={[field.value]} max={100} step={1} /></FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                
                                 <FormField
                                     control={form.control}
                                     name="password"

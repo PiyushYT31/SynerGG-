@@ -51,6 +51,7 @@ const formSchema = z.object({
   teamStyle: z.string().optional(),
   description: z.string().optional(),
   achievements: z.string().optional(),
+  socialLinks: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -65,6 +66,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
       teamStyle: '',
       description: '',
       achievements: '',
+      socialLinks: '',
     },
   });
 
@@ -97,6 +99,7 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
         teamStyle: profile.teamStyle || '',
         description: profile.description || '',
         achievements: profile.achievements?.join('\n') || '',
+        socialLinks: profile.socialLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
       });
     }
   }, [profile, form]);
@@ -227,6 +230,20 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
             </FormItem>
           )}
         />
+         <FormField
+          control={form.control}
+          name="socialLinks"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Social Media Links</FormLabel>
+              <FormControl>
+                <Textarea placeholder={"youtube,https://youtube.com/...\ninstagram,https://instagram.com/..."} {...field} value={field.value || ''} rows={4} />
+              </FormControl>
+              <FormDescription>Enter one link per line, with the platform (youtube, instagram, twitter) and URL separated by a comma.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Saving...' : <><Save className="mr-2 h-4 w-4" /> Save Changes</>}
         </Button>
@@ -253,6 +270,17 @@ export default function EditOrganizationProfilePage() {
 
         const orgDocRef = doc(firestore, 'organization_profiles', profile.id);
         const achievementsArray = values.achievements?.split('\n').filter(line => line.trim() !== '') || [];
+        const socialLinksArray = values.socialLinks?.split('\n').filter(line => line.trim() !== '' && line.includes(',')).map(line => {
+            const [name, ...urlParts] = line.split(',');
+            const url = urlParts.join(',').trim();
+            const existingLink = profile.socialLinks?.find(l => l.url === url);
+            return { 
+                id: existingLink?.id || crypto.randomUUID(),
+                name: name.trim().toLowerCase(), 
+                url: url 
+            };
+        }) || [];
+
 
         const updatedData = {
             name: values.name,
@@ -261,6 +289,7 @@ export default function EditOrganizationProfilePage() {
             teamStyle: values.teamStyle,
             description: values.description,
             achievements: achievementsArray,
+            socialLinks: socialLinksArray,
             updatedAt: new Date().toISOString(),
         };
 

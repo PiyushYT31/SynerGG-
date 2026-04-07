@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp, LogOut } from 'lucide-react';
+import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp, LogOut, Youtube, Instagram, Twitter } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +32,12 @@ const statusIcons: { [key: string]: React.ReactNode } = {
     'Vacant': <Unlock className="h-4 w-4 text-green-500" />,
     'Open for Replacement': <UserPlus className="h-4 w-4 text-yellow-500" />,
 };
+
+const socialIcons: { [key: string]: React.ReactNode } = {
+    youtube: <Youtube className="h-5 w-5 text-red-500" />,
+    instagram: <Instagram className="h-5 w-5 text-pink-500" />,
+    twitter: <Twitter className="h-5 w-5 text-sky-500" />,
+}
 
 function RosterPlayer({ playerId }: { playerId: string }) {
     const { firestore } = useFirebase();
@@ -367,7 +373,7 @@ export default function OrganizationProfilePage() {
 
                             <div className="space-y-6">
                                 <Card>
-                                    <CardHeader><CardTitle className="font-headline">Contact Info</CardTitle></CardHeader>
+                                    <CardHeader><CardTitle className="font-headline">Contact & Socials</CardTitle></CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <Mail className="h-5 w-5 text-muted-foreground" />
@@ -377,6 +383,16 @@ export default function OrganizationProfilePage() {
                                             <div className="flex items-center gap-3">
                                                 <Phone className="h-5 w-5 text-muted-foreground" />
                                                 <span>{profile.phoneNumber}</span>
+                                            </div>
+                                        )}
+                                        {profile.socialLinks && profile.socialLinks.length > 0 && (
+                                            <div className="space-y-2 pt-4 border-t">
+                                            {profile.socialLinks.map((link) => (
+                                                <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm hover:text-primary">
+                                                    {socialIcons[link.name as keyof typeof socialIcons]}
+                                                    <span className="truncate">{link.url}</span>
+                                                </a>
+                                            ))}
                                             </div>
                                         )}
                                     </CardContent>

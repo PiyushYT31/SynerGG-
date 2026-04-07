@@ -6,12 +6,12 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 
 import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { type PlayerProfile, type OrganizationProfile, type TryoutRequest } from '@/lib/types';
+import { type PlayerProfile, type OrganizationProfile, type TryoutRequest, type SocialLink } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart, Cake } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart, Cake, Instagram, Twitter } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,13 @@ const roleIcons: { [key: string]: React.ReactNode } = {
     'Assaulter': <Target className="h-4 w-4" />,
     'Sniper': <Crosshair className="h-4 w-4" />,
 };
+
+const socialIcons: { [key: string]: React.ReactNode } = {
+    youtube: <Youtube className="h-5 w-5 text-red-500" />,
+    instagram: <Instagram className="h-5 w-5 text-pink-500" />,
+    twitter: <Twitter className="h-5 w-5 text-sky-500" />,
+}
+
 
 function ProfileSkeleton() {
     return (
@@ -372,7 +379,7 @@ export default function PlayerProfilePage() {
                             </Card>
                         )}
                         <Card>
-                            <CardHeader><CardTitle className="font-headline">Contact</CardTitle></CardHeader>
+                            <CardHeader><CardTitle className="font-headline">Contact & Socials</CardTitle></CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <Mail className="h-5 w-5 text-muted-foreground" />
@@ -382,6 +389,16 @@ export default function PlayerProfilePage() {
                                     <Phone className="h-5 w-5 text-muted-foreground" />
                                     <span>{profile.phoneNumber}</span>
                                 </div>
+                                 {profile.socialLinks && profile.socialLinks.length > 0 && (
+                                    <div className="space-y-2 pt-4 border-t">
+                                    {profile.socialLinks.map((link) => (
+                                        <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm hover:text-primary">
+                                            {socialIcons[link.name as keyof typeof socialIcons]}
+                                            <span className="truncate">{link.url}</span>
+                                        </a>
+                                    ))}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
