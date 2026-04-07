@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, addDoc } from 'firebase/firestore';
 import { format, subYears } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,8 +28,6 @@ import { useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
@@ -65,7 +62,6 @@ export default function PlayerSignUp() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,6 +82,21 @@ export default function PlayerSignUp() {
       device: undefined,
     },
   });
+
+  // State for individual DOB components
+  const [day, setDay] = useState<string>('');
+  const [month, setMonth] = useState<string>('');
+  const [year, setYear] = useState<string>('');
+
+  // useEffect to combine and set dateOfBirth
+  useEffect(() => {
+    if (day && month && year) {
+      // month is 0-indexed for Date constructor
+      const date = new Date(parseInt(year), parseInt(month), parseInt(day));
+      form.setValue('dateOfBirth', date, { shouldValidate: true });
+    }
+  }, [day, month, year, form]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!auth || !firestore) {
@@ -150,6 +161,25 @@ export default function PlayerSignUp() {
         });
     }
   }
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const months = [
+      { value: '0', label: 'January' },
+      { value: '1', label: 'February' },
+      { value: '2', label: 'March' },
+      { value: '3', label: 'April' },
+      { value: '4', label: 'May' },
+      { value: '5', label: 'June' },
+      { value: '6', label: 'July' },
+      { value: '7', label: 'August' },
+      { value: '8', label: 'September' },
+      { value: '9', label: 'October' },
+      { value: '10', label: 'November' },
+      { value: '11', label: 'December' },
+  ];
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -231,56 +261,37 @@ export default function PlayerSignUp() {
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="dateOfBirth"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-col pt-2">
-                                        <FormLabel>Date of Birth</FormLabel>
-                                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                            <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                variant={"outline"}
-                                                className={cn(
-                                                    "w-full pl-3 text-left font-normal",
-                                                    !field.value && "text-muted-foreground"
-                                                )}
-                                                >
-                                                {field.value ? (
-                                                    format(field.value, "PPP")
-                                                ) : (
-                                                    <span>Pick a date</span>
-                                                )}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value}
-                                                onSelect={(date) => {
-                                                    if(date) field.onChange(date);
-                                                    setIsCalendarOpen(false);
-                                                }}
-                                                disabled={(date) =>
-                                                date > new Date() || date < new Date("1900-01-01")
-                                                }
-                                                captionLayout="dropdown-buttons"
-                                                fromYear={1960}
-                                                toYear={new Date().getFullYear()}
-                                                initialFocus
-                                            />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormDescription>
-                                            You must be at least 16 years old.
-                                        </FormDescription>
-                                        <FormMessage />
-                                        </FormItem>
-                                    )}
-                                    />
+
+                                <div className="md:col-span-2">
+                                  <FormLabel>Date of Birth</FormLabel>
+                                  <div className="grid grid-cols-3 gap-4 mt-2">
+                                      <Select onValueChange={setDay} value={day}>
+                                          <FormControl><SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger></FormControl>
+                                          <SelectContent>
+                                              {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                          </SelectContent>
+                                      </Select>
+                                      <Select onValueChange={setMonth} value={month}>
+                                          <FormControl><SelectTrigger><SelectValue placeholder="Month" /></SelectTrigger></FormControl>
+                                          <SelectContent>
+                                              {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                                          </SelectContent>
+                                      </Select>
+                                      <Select onValueChange={setYear} value={year}>
+                                          <FormControl><SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger></FormControl>
+                                          <SelectContent>
+                                              {years.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                                          </SelectContent>
+                                      </Select>
+                                  </div>
+                                  <p className={cn("text-sm font-medium text-destructive", form.formState.errors.dateOfBirth ? 'mt-2' : 'hidden')}>
+                                      {form.formState.errors.dateOfBirth?.message}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground mt-2">
+                                      You must be at least 16 years old.
+                                  </p>
+                                </div>
+                                
                                  <FormField
                                     control={form.control}
                                     name="role"
