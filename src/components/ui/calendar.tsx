@@ -6,8 +6,6 @@ import { DayPicker, useDayPicker, useNavigation } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
-import { format } from "date-fns"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -25,7 +23,7 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        caption_label: "hidden", // Hide the default label
         caption_dropdowns: "flex justify-center gap-1",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
@@ -61,19 +59,19 @@ function Calendar({
           const { goToMonth, displayMonth } = useNavigation();
           const { fromDate, toDate } = useDayPicker();
 
-          const handleYearChange = (value: string) => {
+          const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             const newDate = new Date(displayMonth);
-            newDate.setFullYear(parseInt(value, 10));
+            newDate.setFullYear(parseInt(e.target.value, 10));
             goToMonth(newDate);
           };
 
-          const handleMonthChange = (value: string) => {
+          const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             const newDate = new Date(displayMonth);
-            newDate.setMonth(parseInt(value, 10));
+            newDate.setMonth(parseInt(e.target.value, 10));
             goToMonth(newDate);
           };
 
-          const years = [];
+          const years: number[] = [];
           const startYear = fromDate ? fromDate.getFullYear() : new Date().getFullYear() - 100;
           const endYear = toDate ? toDate.getFullYear() : new Date().getFullYear();
           for (let i = endYear; i >= startYear; i--) {
@@ -86,27 +84,25 @@ function Calendar({
           ];
           
           return (
-            <div className="flex justify-between items-center gap-2">
-              <Select value={String(displayMonth.getMonth())} onValueChange={handleMonthChange}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((month, index) => (
-                    <SelectItem key={month} value={String(index)}>{month}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={String(displayMonth.getFullYear())} onValueChange={handleYearChange}>
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex justify-center gap-2">
+              <select
+                onChange={handleMonthChange}
+                value={displayMonth.getMonth()}
+                className={cn(buttonVariants({ variant: "outline" }), "h-auto w-auto pr-8 text-sm font-medium")}
+              >
+                {months.map((month, index) => (
+                  <option key={month} value={index}>{month}</option>
+                ))}
+              </select>
+              <select
+                onChange={handleYearChange}
+                value={displayMonth.getFullYear()}
+                className={cn(buttonVariants({ variant: "outline" }), "h-auto w-auto pr-8 text-sm font-medium")}
+              >
+                {years.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
           )
         }
