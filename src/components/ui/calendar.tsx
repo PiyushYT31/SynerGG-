@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -81,7 +82,7 @@ function Calendar({
                 <SelectValue>{selected?.props?.children}</SelectValue>
               </SelectTrigger>
               <SelectContent position="popper">
-                <div className="max-h-60 overflow-y-auto">
+                <ScrollArea className="h-72">
                     {options.map((option, id: number) => (
                     <SelectItem
                         key={`${option.props.value}-${id}`}
@@ -90,7 +91,7 @@ function Calendar({
                         {option.props.children}
                     </SelectItem>
                     ))}
-                </div>
+                </ScrollArea>
               </SelectContent>
             </Select>
           );
