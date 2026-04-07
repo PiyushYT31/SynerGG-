@@ -65,6 +65,7 @@ export default function PlayerSignUp() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -235,7 +236,7 @@ export default function PlayerSignUp() {
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col pt-2">
                                         <FormLabel>Date of Birth</FormLabel>
-                                        <Popover>
+                                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                             <PopoverTrigger asChild>
                                             <FormControl>
                                                 <Button
@@ -258,11 +259,14 @@ export default function PlayerSignUp() {
                                             <Calendar
                                                 mode="single"
                                                 selected={field.value}
-                                                onSelect={field.onChange}
+                                                onSelect={(date) => {
+                                                    field.onChange(date);
+                                                    setIsCalendarOpen(false);
+                                                }}
                                                 disabled={(date) =>
                                                 date > new Date() || date < new Date("1900-01-01")
                                                 }
-                                                captionLayout="dropdown-buttons"
+                                                captionLayout="dropdown"
                                                 fromYear={1960}
                                                 toYear={new Date().getFullYear()}
                                                 initialFocus
@@ -432,5 +436,3 @@ export default function PlayerSignUp() {
     </div>
   );
 }
-
-    
