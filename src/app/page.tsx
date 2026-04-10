@@ -56,7 +56,10 @@ export default function LandingPage() {
             >
               Unleash Your Synergy
             </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-lg text-primary-foreground/80 md:text-xl">
+            <p 
+              className="mx-auto mt-6 max-w-3xl text-lg text-foreground/90 md:text-xl"
+              style={{ textShadow: '0 2px 4px hsl(var(--background) / 0.6)' }}
+            >
               Discover, recruit, and build your next champion roster. The ultimate scouting ground for BGMI esports talent.
             </p>
             <div className="mt-10">
