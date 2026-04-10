@@ -170,56 +170,6 @@ export default function OrganizationSignUp() {
                                         </FormItem>
                                     )}
                                 />
-                                 <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Password</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
-                                                        onClick={() => setShowPassword(prev => !prev)}
-                                                    >
-                                                        {showPassword ? <EyeOff /> : <Eye />}
-                                                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="confirmPassword"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Confirm Password</FormLabel>
-                                            <FormControl>
-                                                 <div className="relative">
-                                                    <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
-                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
-                                                    >
-                                                        {showConfirmPassword ? <EyeOff /> : <Eye />}
-                                                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                                 <FormField
                                     control={form.control}
                                     name="phoneNumber"
@@ -280,6 +230,56 @@ export default function OrganizationSignUp() {
                                             <FormLabel>Analyst (Optional)</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="e.g. Rachel Zane" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Password</FormLabel>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                        onClick={() => setShowPassword(prev => !prev)}
+                                                    >
+                                                        {showPassword ? <EyeOff /> : <Eye />}
+                                                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                                                    </Button>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Confirm Password</FormLabel>
+                                            <FormControl>
+                                                 <div className="relative">
+                                                    <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff /> : <Eye />}
+                                                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                                                    </Button>
+                                                </div>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
