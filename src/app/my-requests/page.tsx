@@ -129,7 +129,7 @@ function InvitationCard({ request, playerProfile }: { request: TryoutRequest; pl
                     )}
                      {request.mouPlayerConfirmedAt && (
                         <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
-                            <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}.
+                            <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}. Waiting for organization to confirm.
                         </p>
                     )}
                 </CardContent>
@@ -212,12 +212,12 @@ function ApplicationCard({ request, playerProfile }: { request: TryoutRequest; p
                     </div>
                      {request.status === 'Accepted' && !request.mouGeneratedAt && (
                         <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
-                            <ShieldCheck /> Your application has been accepted!
+                            <ShieldCheck /> Your application has been accepted! The organization may follow up with an agreement.
                         </p>
                     )}
                     {request.mouPlayerConfirmedAt && (
                         <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
-                            <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}.
+                            <ShieldCheck /> You confirmed this agreement on {format(new Date(request.mouPlayerConfirmedAt), 'PP')}. Waiting for organization to confirm.
                         </p>
                     )}
                 </CardContent>
@@ -251,7 +251,7 @@ export default function MyRequestsPage() {
     useEffect(() => {
         if (!firestore || !allRequests) return;
 
-        const unreadRequests = allRequests.filter(r => r.sentBy === 'Org' && r.status === 'Pending' && r.isReadByPlayer === false);
+        const unreadRequests = allRequests.filter(r => r.sentBy === 'Org' && r.status === 'Pending' && !r.isReadByPlayer);
         
         if (unreadRequests.length > 0) {
             const batch = writeBatch(firestore);

@@ -67,16 +67,18 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
         try {
             await updateDoc(requestRef, updateData);
             
-            if (onConfirm) {
-                await onConfirm();
+            // If the org is confirming, run the roster update logic
+            if (currentUserType === 'org' && onConfirm) {
+                await onConfirm(); // This will show its own toasts
             } else {
                 toast({ title: 'Agreement Confirmed', description: 'Your confirmation has been recorded.' });
             }
             
             onOpenChange(false);
         } catch (error) {
-            console.error(error);
-            if (!onConfirm) {
+            console.error("Confirmation error:", error);
+            // onConfirm should be handling its own errors/toasts
+            if (currentUserType === 'player') {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not confirm agreement.' });
             }
         } finally {

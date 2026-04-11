@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { collection, query, where, doc, updateDoc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, getDocs, writeBatch } from 'firebase/firestore';
 import Link from 'next/link';
 
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -20,7 +20,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 function PlayerInfo({ playerId }: { playerId: string }) {
     const { firestore } = useFirebase();
-    const playerRef = useMemoFirebase(() => doc(firestore, 'player_profiles', playerId), [firestore, playerId]);
+    const playerRef = useMemoFirebase(() => firestore ? doc(firestore, 'player_profiles', playerId) : null, [firestore, playerId]);
     const { data: player, isLoading } = useDoc<PlayerProfile>(playerRef);
 
     if (isLoading) return <Skeleton className="h-10 w-32" />;
@@ -164,7 +164,7 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                 <AlertDialogHeader>
                     <AlertDialogTitle>Accept Application for {player?.ign || 'this player'}?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Would you like to generate a Memorandum of Understanding (MoU) to formalize the agreement?
+                        Would you like to generate a Memorandum of Understanding (MoU) to formalize the agreement? This will require confirmation from both you and the player.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -173,7 +173,7 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                         Accept without MoU
                     </Button>
                     <AlertDialogAction onClick={() => handleAccept(true)} disabled={isProcessing}>
-                        Yes, Accept & Sign MoU
+                        Accept & Generate MoU
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -193,7 +193,7 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                     </blockquote>
                 )}
                  <div className="mt-4 flex flex-wrap gap-2">
-                    {request.status === 'Pending' && (
+                    {request.status === 'Pending' && request.sentBy === 'Player' && (
                         <>
                             <Button onClick={() => setIsAlertOpen(true)} disabled={isProcessing} size="sm">
                                 <Check className="mr-2 h-4 w-4" /> Accept
@@ -256,7 +256,7 @@ export default function TryoutRequestsPage() {
   useEffect(() => {
     if (!firestore || !allRequests) return;
 
-    const unreadRequests = allRequests.filter(r => r.sentBy === 'Player' && r.status === 'Pending' && r.isReadByOrg === false);
+    const unreadRequests = allRequests.filter(r => r.sentBy === 'Player' && r.status === 'Pending' && !r.isReadByOrg);
 
     if (unreadRequests.length > 0) {
         const batch = writeBatch(firestore);
