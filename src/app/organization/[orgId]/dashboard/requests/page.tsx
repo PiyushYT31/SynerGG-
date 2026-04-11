@@ -215,7 +215,7 @@ function RequestCard({ request, organization }: { request: TryoutRequest, organi
                 )}
                  {request.status === 'Accepted' && !request.mouGeneratedAt && (
                     <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
-                        <ShieldCheck /> Application accepted.
+                        <ShieldCheck /> {request.sentBy === 'Player' ? 'Application accepted.' : 'Invitation accepted.'}
                     </p>
                 )}
                 {request.mouOrgConfirmedAt && (
@@ -242,8 +242,7 @@ export default function TryoutRequestsPage() {
     () => firestore && orgId 
         ? query(
             collection(firestore, 'tryout_requests'), 
-            where('organizationId', '==', orgId),
-            where('sentBy', '==', 'Player')
+            where('organizationId', '==', orgId)
           ) 
         : null,
     [firestore, orgId]
@@ -251,13 +250,13 @@ export default function TryoutRequestsPage() {
   
   const { data: allRequests, isLoading: areRequestsLoading } = useCollection<TryoutRequest>(requestsQuery);
 
-  const pendingRequests = allRequests?.filter(r => r.status === 'Pending') ?? [];
+  const pendingApplications = allRequests?.filter(r => r.status === 'Pending' && r.sentBy === 'Player') ?? [];
   const acceptedRequests = allRequests?.filter(r => r.status === 'Accepted') ?? [];
   
   useEffect(() => {
     if (!firestore || !allRequests) return;
 
-    const unreadRequests = allRequests.filter(r => r.status === 'Pending' && r.isReadByOrg === false);
+    const unreadRequests = allRequests.filter(r => r.sentBy === 'Player' && r.status === 'Pending' && r.isReadByOrg === false);
 
     if (unreadRequests.length > 0) {
         const batch = writeBatch(firestore);
@@ -280,9 +279,9 @@ export default function TryoutRequestsPage() {
                     <Skeleton className="h-32 w-full" />
                     <Skeleton className="h-32 w-full" />
                 </div>
-            ) : pendingRequests.length > 0 && organizationProfile ? (
+            ) : pendingApplications.length > 0 && organizationProfile ? (
                 <div className="space-y-4">
-                    {pendingRequests.map(req => <RequestCard key={req.id} request={req} organization={organizationProfile} />)}
+                    {pendingApplications.map(req => <RequestCard key={req.id} request={req} organization={organizationProfile} />)}
                 </div>
             ) : (
                 <Card className="text-center py-12">
@@ -304,7 +303,7 @@ export default function TryoutRequestsPage() {
             ) : (
                 <Card className="text-center py-12">
                     <CardHeader><CardTitle>No Accepted Players</CardTitle></CardHeader>
-                    <CardContent><p>Accepted player applications will appear here.</p></CardContent>
+                    <CardContent><p>Accepted player applications and invitations will appear here.</p></CardContent>
                 </Card>
             )}
         </div>
