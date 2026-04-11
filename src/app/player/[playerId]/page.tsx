@@ -122,19 +122,20 @@ export default function PlayerProfilePage() {
     );
     const { data: lockedInOrg, isLoading: isOrgLoading } = useDoc<OrganizationProfile>(lockedInOrgRef);
 
-    // Check if an invite has already been sent from the current org to this player
+    // Check if a PENDING invite has already been sent from the current org to this player
     const existingRequestQuery = useMemoFirebase(() => (
       firestore && currentOrgProfile && profile
         ? query(
             collection(firestore, 'tryout_requests'),
             where('organizationId', '==', currentOrgProfile.id),
             where('playerId', '==', profile.id),
-            where('sentBy', '==', 'Org')
+            where('sentBy', '==', 'Org'),
+            where('status', '==', 'Pending')
           )
         : null
     ), [firestore, currentOrgProfile, profile]);
     const { data: existingRequests, isLoading: isLoadingExistingRequest } = useCollection<TryoutRequest>(existingRequestQuery);
-    const hasSentInvite = existingRequests && existingRequests.length > 0;
+    const hasPendingInvite = existingRequests && existingRequests.length > 0;
 
   const handleInvite = async () => {
       if (!currentOrgProfile || !profile || !firestore) {
@@ -147,8 +148,8 @@ export default function PlayerProfilePage() {
           return;
       }
       
-      if (hasSentInvite) {
-          toast({ title: 'Already Invited', description: 'You have already sent an invitation to this player.' });
+      if (hasPendingInvite) {
+          toast({ title: 'Already Invited', description: 'You have a pending invitation with this player.' });
           return;
       }
 
@@ -172,6 +173,14 @@ export default function PlayerProfilePage() {
       }
   };
 
+  const isInviteButtonDisabled = isPlayerLocked || hasPendingInvite;
+
+  let inviteButtonTooltip: string | null = null;
+  if (isPlayerLocked) {
+    inviteButtonTooltip = `${profile.ign} is currently locked in ${lockedInOrg ? lockedInOrg.name : 'another team\'s roster'}.`;
+  } else if (hasPendingInvite) {
+    inviteButtonTooltip = `You have a pending invitation with ${profile.ign}.`;
+  }
 
   const isLoading = isProfileLoading || isLockedSlotLoading || isOrgLoading || isLoadingExistingRequest;
 
@@ -222,33 +231,27 @@ export default function PlayerProfilePage() {
                     </>
                 )}
                 {currentOrgProfile && !isOwner && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div className="inline-block"> {/* Wrapper for disabled button */}
-                                    {hasSentInvite ? (
-                                        <Button disabled variant="secondary">
-                                            <Check className="mr-2 h-4 w-4" /> Invite Sent!
-                                        </Button>
-                                    ) : (
-                                        <Button onClick={handleInvite} disabled={isPlayerLocked}>
-                                            <UserPlus className="mr-2 h-4 w-4" /> Invite for Tryout
-                                        </Button>
-                                    )}
-                                </div>
-                            </TooltipTrigger>
-                            {isPlayerLocked && !hasSentInvite && (
-                                <TooltipContent>
-                                    <p>{profile.ign} is currently locked in {lockedInOrg ? lockedInOrg.name : 'another team\'s roster'}.</p>
-                                </TooltipContent>
-                            )}
-                             {hasSentInvite && (
-                                <TooltipContent>
-                                    <p>You have already sent an invitation to {profile.ign}.</p>
-                                </TooltipContent>
-                            )}
-                        </Tooltip>
-                    </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="inline-block"> {/* Wrapper for disabled button */}
+                           <Button 
+                              onClick={handleInvite} 
+                              disabled={isInviteButtonDisabled}
+                              variant={hasPendingInvite ? 'secondary' : 'default'}
+                            >
+                              {hasPendingInvite ? <Check className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                              {hasPendingInvite ? 'Invite Sent' : 'Invite for Tryout'}
+                            </Button>
+                        </div>
+                      </TooltipTrigger>
+                      {inviteButtonTooltip && (
+                        <TooltipContent>
+                          <p>{inviteButtonTooltip}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 <Button asChild variant="outline"><Link href="/organizations">Explore Organizations</Link></Button>
                 {user && (
