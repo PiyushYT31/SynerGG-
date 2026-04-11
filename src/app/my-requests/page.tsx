@@ -55,14 +55,24 @@ function InvitationCard({ request, playerProfile }: { request: TryoutRequest; pl
         if (!firestore) return;
         setIsProcessing(true);
         const requestRef = doc(firestore, 'tryout_requests', request.id);
-        const updatedData = {
+        
+        const updatedData: any = {
             status,
             respondedAt: new Date().toISOString(),
         };
 
+        if (status === 'Accepted') {
+            // Automatically generate the MoU when player accepts an invitation
+            updatedData.mouGeneratedAt = new Date().toISOString();
+        }
+
         updateDoc(requestRef, updatedData)
             .then(() => {
-                toast({ title: 'Success', description: `Invitation has been ${status.toLowerCase()}.` });
+                let description = `Invitation has been ${status.toLowerCase()}.`;
+                if (status === 'Accepted') {
+                    description = "Invitation accepted! An agreement has been generated for you to confirm."
+                }
+                toast({ title: 'Success', description });
             })
             .catch((serverError) => {
                 const permissionError = new FirestorePermissionError({
