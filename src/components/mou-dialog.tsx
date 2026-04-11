@@ -119,7 +119,7 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                             <div className="grid grid-cols-2 gap-8 items-start my-6">
                                 <div className="flex flex-col items-center text-center">
                                     <Avatar className="h-24 w-24">
-                                        <AvatarImage src={organization.logoUrl} />
+                                        <AvatarImage src={organization.logoUrl} crossOrigin="anonymous" />
                                         <AvatarFallback>{organization.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <p className="font-bold mt-2">{organization.name}</p>
@@ -127,7 +127,7 @@ export function MoUDialog({ request, player, organization, open, onOpenChange, c
                                 </div>
                                 <div className="flex flex-col items-center text-center">
                                     <Avatar className="h-24 w-24">
-                                        <AvatarImage src={player.profilePictureUrl} />
+                                        <AvatarImage src={player.profilePictureUrl} crossOrigin="anonymous" />
                                         <AvatarFallback>{player.ign.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <p className="font-bold mt-2">{player.ign}</p>
