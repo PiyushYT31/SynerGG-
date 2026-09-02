@@ -56,16 +56,19 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
     const { firestore } = useFirebase();
     const { toast } = useToast();
 
+    const canApplyByVerified = !!(currentPlayerProfile && currentPlayerProfile.isVerified);
     const canApplyByRole = !!(currentPlayerProfile && currentPlayerProfile.role === slot.requiredRole);
     const canApplyByFd = !!(currentPlayerProfile && currentPlayerProfile.fdRatio >= slot.minFdRatio);
-    const canApply = canApplyByRole && canApplyByFd;
+    const canApply = canApplyByVerified && canApplyByRole && canApplyByFd;
     
     const isApplyButtonVisible = (slot.status === 'Vacant' || slot.status === 'Open for Replacement') && currentPlayerProfile;
     
     const handleApply = async () => {
         if (!canApply || !currentPlayerProfile || !firestore) {
             let errorDesc = 'You do not meet the requirements for this slot.';
-            if (!canApplyByRole) {
+            if (!canApplyByVerified) {
+                errorDesc = 'You must verify your profile identity before you can apply to organizations.';
+            } else if (!canApplyByRole) {
                  errorDesc = `Your role (${currentPlayerProfile?.role}) does not match the required role (${slot.requiredRole}).`;
             } else if (!canApplyByFd) {
                  errorDesc = `Your F/D ratio (${currentPlayerProfile?.fdRatio}) does not meet the minimum requirement of ${slot.minFdRatio}.`;
@@ -95,7 +98,9 @@ function RosterCard({ slot, org, currentPlayerProfile }: { slot: RosterSlot, org
     
     let tooltipMessage = '';
     if (isApplyButtonVisible && !canApply) {
-        if (!canApplyByRole) {
+        if (!canApplyByVerified) {
+            tooltipMessage = 'You must verify your profile identity before you can apply.';
+        } else if (!canApplyByRole) {
             tooltipMessage = `Your profile role (${currentPlayerProfile?.role}) does not match the required role (${slot.requiredRole}).`;
         } else if (!canApplyByFd) {
              tooltipMessage = `Your F/D ratio (${currentPlayerProfile?.fdRatio}) does not meet the minimum of ${slot.minFdRatio}.`;

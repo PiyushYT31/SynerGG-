@@ -6,123 +6,93 @@
   "org_logos": [
     {
       "id": "org1",
-      "name": "iQOO SOUL",
-      "src": "https://picsum.photos/seed/iqoo-soul/200/100",
-      "hint": "esports logo minimal"
+      "name": "8-Bit",
+      "src": "/logos/8-Bit.png",
+      "hint": "esports logo text"
     },
     {
       "id": "org2",
-      "name": "Godlike Esports",
-      "src": "https://picsum.photos/seed/godlike-esports/200/100",
-      "hint": "esports logo dark"
+      "name": "K9 Esports",
+      "src": "/logos/K9 Esports.png",
+      "hint": "esports logo blue text"
     },
     {
       "id": "org3",
-      "name": "Team XSpark",
-      "src": "https://picsum.photos/seed/team-xspark/200/100",
-      "hint": "esports logo red"
+      "name": "LEFP",
+      "src": "/logos/LTP.png",
+      "hint": "esports logo distressed"
     },
     {
       "id": "org4",
-      "name": "Orangutan",
-      "src": "https://picsum.photos/seed/orangutan-gaming/200/100",
-      "hint": "esports logo animal"
+      "name": "MadKings",
+      "src": "/logos/MadKings.png",
+      "hint": "esports logo circular"
     },
     {
       "id": "org5",
-      "name": "Revenant Esports",
-      "src": "https://picsum.photos/seed/revenant-esports/200/100",
-      "hint": "esports logo purple"
+      "name": "Meta Ninza",
+      "src": "/logos/Meta Ninza.png",
+      "hint": "esports logo yellow ninja"
     },
     {
       "id": "org6",
-      "name": "Team Tamilas",
-      "src": "https://picsum.photos/seed/team-tamilas/200/100",
-      "hint": "esports logo simple"
+      "name": "Godlike Esports",
+      "src": "/logos/Godlike Esports.png",
+      "hint": "esports logo shield GL"
     },
     {
       "id": "org7",
-      "name": "Gladiators Esports",
-      "src": "https://picsum.photos/seed/gladiators-esports/200/100",
-      "hint": "esports logo helmet"
+      "name": "Team Apex Gaming",
+      "src": "/logos/Team APEX.png",
+      "hint": "esports logo simple apex"
     },
     {
       "id": "org8",
-      "name": "Blind Esports",
-      "src": "https://picsum.photos/seed/blind-esports/200/100",
-      "hint": "esports logo minimal"
+      "name": "GENESIS",
+      "src": "/logos/GENESIS.png",
+      "hint": "esports logo orange shield"
     },
     {
       "id": "org9",
-      "name": "Global Esports",
-      "src": "https://picsum.photos/seed/global-esports/200/100",
-      "hint": "esports logo animal"
+      "name": "Orangutan",
+      "src": "/logos/Orangutan.png",
+      "hint": "esports logo ape"
     },
     {
       "id": "org10",
-      "name": "Entity Gaming",
-      "src": "https://picsum.photos/seed/entity-gaming/200/100",
-      "hint": "esports logo minimal"
+      "name": "SOUL",
+      "src": "/logos/SOUL.png",
+      "hint": "esports logo soul skull"
     },
     {
       "id": "org11",
-      "name": "8Bit",
-      "src": "https://picsum.photos/seed/8bit-esports/200/100",
-      "hint": "esports logo text"
+      "name": "Team Tamilas",
+      "src": "/logos/Team Tamilas.png",
+      "hint": "esports logo tamilas"
     },
     {
       "id": "org12",
-      "name": "Gods Reign",
-      "src": "https://picsum.photos/seed/gods-reign/200/100",
-      "hint": "esports logo gold"
+      "name": "RNTX",
+      "src": "/logos/RNT.png",
+      "hint": "esports logo rnt wolf"
     },
     {
       "id": "org13",
-      "name": "iQOO RECKONING ESPORTS",
-      "src": "https://picsum.photos/seed/iqoo-reckoning/200/100",
-      "hint": "esports logo minimal"
+      "name": "VS Esports",
+      "src": "/logos/DS Esports.png",
+      "hint": "esports logo red DS"
     },
     {
       "id": "org14",
-      "name": "GENESIS ESPORTS",
-      "src": "https://picsum.photos/seed/genesis-esports/200/100",
-      "hint": "esports logo minimal"
+      "name": "Wyld Fangs",
+      "src": "/logos/FANGS.png",
+      "hint": "esports logo fangs red"
     },
     {
       "id": "org15",
-      "name": "Medal Esports",
-      "src": "https://picsum.photos/seed/medal-esports/200/100",
-      "hint": "esports logo minimal"
-    },
-    {
-      "id": "org16",
-      "name": "Chemin Esports",
-      "src": "https://picsum.photos/seed/chemin-esports/200/100",
-      "hint": "esports logo chemical"
-    },
-    {
-      "id": "org17",
-      "name": "Carnival Gaming",
-      "src": "https://picsum.photos/seed/carnival-gaming/200/100",
-      "hint": "esports logo minimal"
-    },
-    {
-      "id": "org18",
-      "name": "Hydra Esports",
-      "src": "https://picsum.photos/seed/hydra-esports/200/100",
-      "hint": "esports logo animal snake"
-    },
-    {
-      "id": "org19",
-      "name": "FS Esports",
-      "src": "https://picsum.photos/seed/fs-esports/200/100",
-      "hint": "esports logo text"
-    },
-    {
-      "id": "org20",
-      "name": "Team Godspeed",
-      "src": "https://picsum.photos/seed/team-godspeed/200/100",
-      "hint": "esports logo minimal"
+      "name": "Vasista Esports",
+      "src": "/logos/Vasista Esports.png",
+      "hint": "esports logo vasista white V"
     }
   ]
 }

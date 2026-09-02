@@ -44,6 +44,12 @@ export interface PlayerProfile {
   updatedAt: string;
   profilePictureUrl?: string;
   socialLinks?: SocialLink[];
+  isVerified?: boolean;
+  verificationScreenshotUrl?: string;
+  verification_status?: 'unverified' | 'pending' | 'verified';
+  show_verified_badge?: boolean;
+  verifiedIgn?: string;
+  verifiedUid?: string;
 }
 
 export interface OrganizationProfile {

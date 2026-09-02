@@ -6,19 +6,19 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { deleteUser } from 'firebase/auth';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,35 +34,36 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Slider } from '@/components/ui/slider';
 
 
 const formSchema = z.object({
-  ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
-  profilePictureUrl: z.string().optional(),
-  role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
-  playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
-  fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
-  experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
-  idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
-  achievements: z.string().optional(),
-  povLinks: z.string().optional(),
-  socialLinks: z.string().optional(),
-  assaulting: z.number().min(0).max(100),
-  igling: z.number().min(0).max(100),
-  support: z.number().min(0).max(100),
-  survival: z.number().min(0).max(100),
-  sniping: z.number().min(0).max(100),
+    ign: z.string().min(2, { message: 'In-game name must be at least 2 characters.' }),
+    bgmiUid: z.string().min(5, { message: 'Please enter a valid BGMI UID (at least 5 characters).' }),
+    profilePictureUrl: z.string().optional(),
+    role: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
+    playstyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
+    fdRatio: z.coerce.number().min(0, { message: 'F/D Ratio cannot be negative.' }),
+    experience: z.string().min(20, { message: 'Please provide more details about your experience (at least 20 characters).' }),
+    idealTeammateStrategy: z.string().min(20, { message: 'Please describe your ideal team (at least 20 characters).' }),
+    achievements: z.string().optional(),
+    povLinks: z.string().optional(),
+    socialLinks: z.string().optional(),
+    assaulting: z.number().min(0).max(100),
+    igling: z.number().min(0).max(100),
+    support: z.number().min(0).max(100),
+    survival: z.number().min(0).max(100),
+    sniping: z.number().min(0).max(100),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -72,45 +73,24 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            ign: '',
-            profilePictureUrl: '',
-            experience: '',
-            idealTeammateStrategy: '',
-            achievements: '',
-            povLinks: '',
-            socialLinks: '',
-            fdRatio: 0,
-            role: undefined,
-            playstyle: undefined,
-            assaulting: 50,
-            igling: 50,
-            support: 50,
-            survival: 50,
-            sniping: 50,
+            ign: profile.ign || '',
+            bgmiUid: profile.bgmiUid || '',
+            profilePictureUrl: profile.profilePictureUrl || '',
+            experience: profile.experience || '',
+            idealTeammateStrategy: profile.idealTeammateStrategy || '',
+            achievements: profile.achievements?.join('\n') || '',
+            povLinks: profile.povLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
+            socialLinks: profile.socialLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
+            fdRatio: profile.fdRatio || 0,
+            role: profile.role,
+            playstyle: profile.playstyle,
+            assaulting: profile.playerStats?.assaulting ?? 50,
+            igling: profile.playerStats?.igling ?? 50,
+            support: profile.playerStats?.support ?? 50,
+            survival: profile.playerStats?.survival ?? 50,
+            sniping: profile.playerStats?.sniping ?? 50,
         },
     });
-
-    useEffect(() => {
-        if (profile) {
-            form.reset({
-                ign: profile.ign || '',
-                profilePictureUrl: profile.profilePictureUrl || '',
-                experience: profile.experience || '',
-                idealTeammateStrategy: profile.idealTeammateStrategy || '',
-                achievements: profile.achievements?.join('\n') || '',
-                povLinks: profile.povLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
-                socialLinks: profile.socialLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
-                fdRatio: profile.fdRatio || 0,
-                role: profile.role,
-                playstyle: profile.playstyle,
-                assaulting: profile.playerStats?.assaulting ?? 50,
-                igling: profile.playerStats?.igling ?? 50,
-                support: profile.playerStats?.support ?? 50,
-                survival: profile.playerStats?.survival ?? 50,
-                sniping: profile.playerStats?.sniping ?? 50,
-            });
-        }
-    }, [profile, form]);
 
     const profilePicInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,30 +113,30 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
-                 <FormField
+                <FormField
                     control={form.control}
                     name="profilePictureUrl"
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Profile Picture</FormLabel>
-                                <FormControl>
+                            <FormControl>
                                 <div>
-                                <input
-                                    type="file"
-                                    accept="image/png, image/jpeg, image/gif"
-                                    className="hidden"
-                                    ref={profilePicInputRef}
-                                    onChange={handleFileSelect}
-                                />
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-24 w-24 cursor-pointer border" onClick={() => profilePicInputRef.current?.click()}>
-                                    <AvatarImage src={field.value || undefined} alt="Player profile picture" />
-                                    <AvatarFallback className="text-center text-xs p-2">Click to upload</AvatarFallback>
-                                    </Avatar>
-                                    <Button type="button" variant="outline" onClick={() => profilePicInputRef.current?.click()}>
-                                        Upload Picture
-                                    </Button>
-                                </div>
+                                    <input
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/gif"
+                                        className="hidden"
+                                        ref={profilePicInputRef}
+                                        onChange={handleFileSelect}
+                                    />
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="h-24 w-24 cursor-pointer border" onClick={() => profilePicInputRef.current?.click()}>
+                                            <AvatarImage src={field.value || undefined} alt="Player profile picture" />
+                                            <AvatarFallback className="text-center text-xs p-2">Click to upload</AvatarFallback>
+                                        </Avatar>
+                                        <Button type="button" variant="outline" onClick={() => profilePicInputRef.current?.click()}>
+                                            Upload Picture
+                                        </Button>
+                                    </div>
                                 </div>
                             </FormControl>
                             <FormDescription>Recommended: 400x400px, max 2MB.</FormDescription>
@@ -165,13 +145,26 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                     )}
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                     <FormField
+                    <FormField
                         control={form.control}
                         name="ign"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>In-Game Name (IGN)</FormLabel>
                                 <FormControl><Input placeholder="Your BGMI username" {...field} /></FormControl>
+                                <FormDescription>Changing your IGN will revoke your verification badge.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="bgmiUid"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>BGMI UID</FormLabel>
+                                <FormControl><Input placeholder="Your BGMI User ID" {...field} /></FormControl>
+                                <FormDescription>Changing your UID will revoke your verification badge.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -180,8 +173,8 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                         <FormLabel>Date of Birth</FormLabel>
                         <FormControl>
                             <Input
-                            value={profile.dateOfBirth ? format(new Date(profile.dateOfBirth), "PPP") : 'Not set'}
-                            disabled
+                                value={profile.dateOfBirth ? format(new Date(profile.dateOfBirth), "PPP") : 'Not set'}
+                                disabled
                             />
                         </FormControl>
                         <FormDescription>
@@ -199,8 +192,8 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                             </FormItem>
                         )}
                     />
-                    
-                     <FormField
+
+                    <FormField
                         control={form.control}
                         name="role"
                         render={({ field }) => (
@@ -248,35 +241,35 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>POV Links</FormLabel>
-                                    <FormControl><Textarea placeholder={"Scrims POV, https://youtube.com/...\nFinals POV, https://drive.google.com/..."} {...field} rows={5}/></FormControl>
+                                    <FormControl><Textarea placeholder={"Scrims POV, https://youtube.com/...\nFinals POV, https://drive.google.com/..."} {...field} rows={5} /></FormControl>
                                     <FormDescription>Enter one link per line, with the name and URL separated by a comma.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-                     <div className="md:col-span-2">
+                    <div className="md:col-span-2">
                         <FormField
                             control={form.control}
                             name="socialLinks"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Social Media Links</FormLabel>
-                                    <FormControl><Textarea placeholder={"youtube,https://youtube.com/...\ninstagram,https://instagram.com/..."} {...field} rows={3}/></FormControl>
+                                    <FormControl><Textarea placeholder={"youtube,https://youtube.com/...\ninstagram,https://instagram.com/..."} {...field} rows={3} /></FormControl>
                                     <FormDescription>Enter one link per line, with the platform (youtube, instagram, twitter) and URL separated by a comma.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-                     <div className="md:col-span-2">
+                    <div className="md:col-span-2">
                         <FormField
                             control={form.control}
                             name="experience"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Experience</FormLabel>
-                                    <FormControl><Textarea placeholder="Describe your competitive experience, past teams, etc." {...field} rows={5}/></FormControl>
+                                    <FormControl><Textarea placeholder="Describe your competitive experience, past teams, etc." {...field} rows={5} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -296,7 +289,7 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                             )}
                         />
                     </div>
-                     <div className="md:col-span-2">
+                    <div className="md:col-span-2">
                         <FormField
                             control={form.control}
                             name="achievements"
@@ -313,59 +306,59 @@ function EditPlayerForm({ profile, onSave }: { profile: PlayerProfile, onSave: (
                     <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
                         <h3 className="text-lg font-medium">Rate Your Skills</h3>
                         <FormField
-                        control={form.control}
-                        name="assaulting"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Assaulting ({field.value})</FormLabel>
-                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
-                            </FormItem>
-                        )}
+                            control={form.control}
+                            name="assaulting"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Assaulting ({field.value})</FormLabel>
+                                    <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
+                                </FormItem>
+                            )}
                         />
                         <FormField
-                        control={form.control}
-                        name="igling"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>IGLing ({field.value})</FormLabel>
-                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
-                            </FormItem>
-                        )}
+                            control={form.control}
+                            name="igling"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>IGLing ({field.value})</FormLabel>
+                                    <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
+                                </FormItem>
+                            )}
                         />
                         <FormField
-                        control={form.control}
-                        name="support"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Support ({field.value})</FormLabel>
-                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
-                            </FormItem>
-                        )}
+                            control={form.control}
+                            name="support"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Support ({field.value})</FormLabel>
+                                    <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
+                                </FormItem>
+                            )}
                         />
                         <FormField
-                        control={form.control}
-                        name="survival"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Survival/Positioning ({field.value})</FormLabel>
-                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
-                            </FormItem>
-                        )}
+                            control={form.control}
+                            name="survival"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Survival/Positioning ({field.value})</FormLabel>
+                                    <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
+                                </FormItem>
+                            )}
                         />
                         <FormField
-                        control={form.control}
-                        name="sniping"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Sniping ({field.value})</FormLabel>
-                                <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
-                            </FormItem>
-                        )}
+                            control={form.control}
+                            name="sniping"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Sniping ({field.value})</FormLabel>
+                                    <FormControl><Slider onValueChange={(v) => field.onChange(v[0])} value={[field.value]} max={100} step={1} /></FormControl>
+                                </FormItem>
+                            )}
                         />
                     </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                     {form.formState.isSubmitting ? 'Saving...' : <><Save className="mr-2 h-4 w-4" /> Save Changes</>}
+                    {form.formState.isSubmitting ? 'Saving...' : <><Save className="mr-2 h-4 w-4" /> Save Changes</>}
                 </Button>
             </form>
         </Form>
@@ -389,30 +382,35 @@ export default function EditPlayerProfilePage() {
         if (!firestore || !profile) return;
 
         const playerDocRef = doc(firestore, 'player_profiles', profile.id);
-        
+
         const achievementsArray = values.achievements?.split('\n').filter(line => line.trim() !== '') || [];
         const povLinksArray = values.povLinks?.split('\n').filter(line => line.trim() !== '' && line.includes(',')).map(line => {
             const [name, ...urlParts] = line.split(',');
             const url = urlParts.join(',').trim();
             const existingLink = profile.povLinks?.find(l => l.url === url);
-            return { 
+            return {
                 id: existingLink?.id || crypto.randomUUID(),
-                name: name.trim(), 
-                url: url 
+                name: name.trim(),
+                url: url
             };
         }) || [];
         const socialLinksArray = values.socialLinks?.split('\n').filter(line => line.trim() !== '' && line.includes(',')).map(line => {
             const [name, ...urlParts] = line.split(',');
             const url = urlParts.join(',').trim();
             const existingLink = profile.socialLinks?.find(l => l.url === url);
-            return { 
+            return {
                 id: existingLink?.id || crypto.randomUUID(),
-                name: name.trim().toLowerCase(), 
-                url: url 
+                name: name.trim().toLowerCase(),
+                url: url
             };
         }) || [];
 
-        const updatedData: Omit<FormValues, 'povLinks' | 'achievements' | 'socialLinks'> & { achievements: string[], povLinks: any[], socialLinks: any[], playerStats: any, updatedAt: string } = {
+        // Detect if IGN or BGMI UID changed — if so, revoke verification
+        const ignChanged = profile.ign !== values.ign;
+        const uidChanged = profile.bgmiUid !== values.bgmiUid;
+        const identityChanged = ignChanged || uidChanged;
+
+        const updatedData: Record<string, any> = {
             ...values,
             achievements: achievementsArray,
             povLinks: povLinksArray,
@@ -427,13 +425,31 @@ export default function EditPlayerProfilePage() {
             updatedAt: new Date().toISOString(),
         };
 
+        // If player changed their IGN or UID, revoke verification so they must re-verify
+        if (identityChanged) {
+            updatedData.isVerified = false;
+            updatedData.verification_status = 'unverified';
+            updatedData.show_verified_badge = false;
+            updatedData.verificationScreenshotUrl = '';
+            updatedData.verifiedIgn = '';
+            updatedData.verifiedUid = '';
+        }
+
         try {
             await updateDoc(playerDocRef, updatedData as any);
-            toast({ title: 'Profile Updated', description: 'Your changes have been saved successfully.' });
+            if (identityChanged) {
+                toast({
+                    variant: 'destructive',
+                    title: '⚠️ Verification Revoked',
+                    description: `Your verified badge has been removed because you changed your ${ignChanged && uidChanged ? 'IGN and UID' : ignChanged ? 'IGN' : 'UID'}. Please re-verify your profile.`,
+                });
+            } else {
+                toast({ title: 'Profile Updated', description: 'Your changes have been saved successfully.' });
+            }
             router.push(`/player/${playerId}`);
             router.refresh();
         } catch (e: any) {
-             if (e.code === 'permission-denied') {
+            if (e.code === 'permission-denied') {
                 const permissionError = new FirestorePermissionError({
                     path: playerDocRef.path,
                     operation: 'update',
@@ -509,11 +525,11 @@ export default function EditPlayerProfilePage() {
             }
         }
     }
-    
-     const renderContent = () => {
+
+    const renderContent = () => {
         if (isLoading) {
             return (
-                 <div className="space-y-6">
+                <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <Skeleton className="h-10 w-full" />
                         <Skeleton className="h-10 w-full" />
@@ -543,7 +559,7 @@ export default function EditPlayerProfilePage() {
                 <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                     <Logo />
                     <Button asChild variant="outline" disabled={!playerId}>
-                        <Link href={playerId ? `/player/${playerId}`: '/'}>
+                        <Link href={playerId ? `/player/${playerId}` : '/'}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back to Profile
                         </Link>
@@ -551,7 +567,7 @@ export default function EditPlayerProfilePage() {
                 </div>
             </header>
             <main className="flex-1 flex items-center justify-center py-12">
-                 <Card className="m-4 w-full max-w-3xl">
+                <Card className="m-4 w-full max-w-3xl">
                     <CardHeader>
                         <CardTitle className="font-headline">Edit Player Profile</CardTitle>
                         <CardDescription>
@@ -559,8 +575,8 @@ export default function EditPlayerProfilePage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                       {renderContent()}
-                       {isOwner && profile && (
+                        {renderContent()}
+                        {isOwner && profile && (
                             <div className="mt-12 pt-8 border-t border-dashed">
                                 <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
                                 <Card className="mt-4 border-destructive">
@@ -604,4 +620,4 @@ export default function EditPlayerProfilePage() {
     );
 }
 
-    
+

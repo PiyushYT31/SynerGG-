@@ -102,6 +102,29 @@ export default function OrganizationSignUp() {
 
         const docRef = await addDoc(orgCollection, orgProfileData);
 
+        // Create default roster slots
+        const slotsCollection = collection(firestore, 'roster_slots');
+        const defaultSlots = [
+            { role: 'IGL', playstyle: 'Tactical' },
+            { role: 'Assaulter', playstyle: 'Aggressive' },
+            { role: 'Entry Fragger', playstyle: 'Aggressive' },
+            { role: 'Support', playstyle: 'Balanced' },
+            { role: 'Substitute', playstyle: 'Balanced' },
+        ];
+        
+        await Promise.all(defaultSlots.map(slot => 
+            addDoc(slotsCollection, {
+                organizationId: docRef.id,
+                organizationManagerUserId: user.uid,
+                slotName: slot.role === 'Substitute' ? 'Substitute' : `Main ${slot.role}`,
+                status: 'Vacant',
+                requiredRole: slot.role,
+                requiredPlaystyle: slot.playstyle,
+                minFdRatio: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            })
+        ));
         toast({
             title: "Profile Created!",
             description: "Your organization profile has been created successfully.",

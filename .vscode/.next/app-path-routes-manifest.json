@@ -1,0 +1,21 @@
+{
+  "/api/verify-profile/route": "/api/verify-profile",
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/organization/login/page": "/organization/login",
+  "/forgot-password/page": "/forgot-password",
+  "/my-requests/page": "/my-requests",
+  "/organizations/page": "/organizations",
+  "/organization/[orgId]/page": "/organization/[orgId]",
+  "/organization/signup/page": "/organization/signup",
+  "/player/[playerId]/edit/page": "/player/[playerId]/edit",
+  "/player/[playerId]/page": "/player/[playerId]",
+  "/player/signup/page": "/player/signup",
+  "/organization/[orgId]/edit/page": "/organization/[orgId]/edit",
+  "/player/[playerId]/vod/[povId]/page": "/player/[playerId]/vod/[povId]",
+  "/page": "/",
+  "/players/page": "/players",
+  "/player/login/page": "/player/login",
+  "/organization/[orgId]/dashboard/roster/page": "/organization/[orgId]/dashboard/roster",
+  "/organization/[orgId]/dashboard/requests/page": "/organization/[orgId]/dashboard/requests"
+}

@@ -59,8 +59,28 @@ export default function PlayerLogin() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      const q = query(collection(firestore, 'player_profiles'), where('userId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
+      let q = query(collection(firestore, 'player_profiles'), where('userId', '==', user.uid));
+      let querySnapshot = await getDocs(q);
+
+      // Fallback for legacy migrated data (e.g., from Firebase Studio) where userId might not match or be missing
+      if (querySnapshot.empty) {
+          const emailQuery = query(collection(firestore, 'player_profiles'), where('email', '==', values.email));
+          querySnapshot = await getDocs(emailQuery);
+          
+          if (!querySnapshot.empty) {
+              // Attempt to link the profile by updating the userId to the new Firebase Auth UID.
+              // Note: This requires firestore.rules to allow this specific update, or it will fail silently here but still log them in.
+              try {
+                  const legacyDoc = querySnapshot.docs[0];
+                  if (legacyDoc.data().userId !== user.uid) {
+                      const { updateDoc, doc } = await import('firebase/firestore');
+                      await updateDoc(doc(firestore, 'player_profiles', legacyDoc.id), { userId: user.uid });
+                  }
+              } catch (e) {
+                  console.warn('Could not auto-link legacy profile userId due to permissions:', e);
+              }
+          }
+      }
 
       if (querySnapshot.empty) {
         toast({

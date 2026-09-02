@@ -139,6 +139,12 @@ export default function PlayerSignUp() {
                 sniping: 50,
             },
             profilePictureUrl: '',
+            isVerified: false,
+            verification_status: 'unverified',
+            show_verified_badge: false,
+            verificationScreenshotUrl: '',
+            verifiedIgn: '',
+            verifiedUid: '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };

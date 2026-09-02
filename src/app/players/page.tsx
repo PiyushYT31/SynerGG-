@@ -1,7 +1,7 @@
 'use client';
 
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, CollectionReference, DocumentData } from 'firebase/firestore';
+import { collection, query, where, CollectionReference, DocumentData, Query } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';

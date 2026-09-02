@@ -56,8 +56,8 @@ function Calendar({
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
         Caption: ({ ...props }) => {
-          const { goToMonth, displayMonth } = useNavigation();
-          const { fromDate, toDate } = useDayPicker();
+          const { goToMonth, displayMonth } = useNavigation() as any;
+          const { fromDate, toDate } = useDayPicker() as any;
 
           const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             const newDate = new Date(displayMonth);
@@ -106,7 +106,7 @@ function Calendar({
             </div>
           )
         }
-      }}
+      } as any}
       {...props}
     />
   )
