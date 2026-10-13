@@ -323,6 +323,7 @@ export default function OrganizationProfilePage() {
 
     const team = [
         { name: profile.owner, role: 'Owner' },
+        { name: profile.manager, role: 'Manager' },
         { name: profile.coOwner, role: 'Co-owner' },
         { name: profile.coach, role: 'Coach' },
         { name: profile.analyst, role: 'Analyst' },
@@ -449,15 +450,43 @@ export default function OrganizationProfilePage() {
                                 <Card>
                                     <CardHeader><CardTitle className="font-headline flex items-center gap-2"><Users /> Team Management</CardTitle></CardHeader>
                                     <CardContent>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                            {team.map(member => (
-                                                <div key={member.role} className="flex flex-col items-center text-center">
-                                                    <Avatar>
-                                                        <AvatarFallback><User /></AvatarFallback>
-                                                    </Avatar>
-                                                    <p className="font-semibold mt-2">{member.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{member.role}</p>
-                                                </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {(profile.teamMembers && profile.teamMembers.length > 0 ? profile.teamMembers : team.map(m => ({ id: m.role.toLowerCase().replace(/\s+/g, '-'), name: m.name, role: m.role as any }))).map((member: any) => (
+                                                <Link 
+                                                    key={member.id || member.role} 
+                                                    href={`/organization/${orgId}/team/${member.id}`}
+                                                    className="group"
+                                                >
+                                                    <Card className="transition-all duration-200 hover:border-primary/50 hover:shadow-md hover:shadow-primary/5 cursor-pointer">
+                                                        <CardContent className="p-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <Avatar className="group-hover:ring-2 group-hover:ring-primary/30 transition-all">
+                                                                    <AvatarFallback className="bg-primary/10 text-primary">
+                                                                        {(member.name || '?').charAt(0).toUpperCase()}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-semibold truncate group-hover:text-primary transition-colors">{member.name}</p>
+                                                                    <p className="text-sm text-muted-foreground">{member.role}</p>
+                                                                </div>
+                                                            </div>
+                                                            {(member.contactNumber || member.pastExperience || member.seekingPlayerType) && (
+                                                                <div className="mt-3 pt-3 border-t space-y-1">
+                                                                    {member.contactNumber && (
+                                                                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                                            <Phone className="h-3 w-3" /> {member.contactNumber}
+                                                                        </p>
+                                                                    )}
+                                                                    {member.seekingPlayerType && (
+                                                                        <p className="text-xs text-muted-foreground truncate">
+                                                                            Seeking: {member.seekingPlayerType}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </CardContent>
+                                                    </Card>
+                                                </Link>
                                             ))}
                                         </div>
                                     </CardContent>

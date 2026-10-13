@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { collection, query, where, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { type RosterSlot, type PlayerProfile, type OrganizationProfile } from '@/lib/types';
+import { type RosterSlot, type PlayerProfile, type OrganizationProfile, ROLE_TO_SLOT_NAME } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -26,7 +26,6 @@ const PLAYSTYLES = ['Aggressive', 'Tactical', 'Balanced', 'Passive'];
 const STATUSES = ['Locked', 'Vacant', 'Open for Replacement'];
 
 const rosterSlotSchema = z.object({
-  slotName: z.string().min(2, 'Slot name is required.'),
   requiredRole: z.enum(['IGL', 'Entry Fragger', 'Support', 'Assaulter', 'Sniper', 'Substitute']),
   requiredPlaystyle: z.enum(['Aggressive', 'Tactical', 'Balanced', 'Passive']),
   minFdRatio: z.coerce.number().min(0, 'Minimum F/D Ratio cannot be negative.'),
@@ -46,27 +45,20 @@ function RosterSlotForm({
 }) {
   const form = useForm<RosterSlotFormValues>({
     resolver: zodResolver(rosterSlotSchema),
-    defaultValues: defaultValues || {
-      slotName: '',
+    defaultValues: {
+      requiredPlaystyle: 'Balanced',
+      status: 'Vacant',
       minFdRatio: 0,
       playerId: '',
+      ...defaultValues,
     },
   });
+
+  const selectedRole = form.watch('requiredRole');
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="slotName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Slot Name</FormLabel>
-              <FormControl><Input placeholder="e.g., Main IGL" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="requiredRole" render={({ field }) => (
             <FormItem><FormLabel>Required Role</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger></FormControl><SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
@@ -75,6 +67,11 @@ function RosterSlotForm({
             <FormItem><FormLabel>Required Playstyle</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a playstyle" /></SelectTrigger></FormControl><SelectContent>{PLAYSTYLES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
           )} />
         </div>
+        {selectedRole && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 px-4 py-3">
+            <p className="text-sm text-muted-foreground">Slot Name: <span className="font-semibold text-foreground">{ROLE_TO_SLOT_NAME[selectedRole] || selectedRole}</span></p>
+          </div>
+        )}
         <FormField
           control={form.control}
           name="minFdRatio"
@@ -121,8 +118,11 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
         if (!firestore) return;
         setIsSubmitting(true);
         const slotDocRef = doc(firestore, 'roster_slots', slot.id);
+        // Auto-assign slot name from role
+        const slotName = ROLE_TO_SLOT_NAME[data.requiredRole] || data.requiredRole;
         const updatedData = {
             ...data,
+            slotName,
             playerId: data.playerId || null, // Ensure it's null if empty
             updatedAt: new Date().toISOString()
         };
@@ -182,7 +182,7 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle>{slot.slotName}</CardTitle>
-                <CardDescription>{slot.requiredRole} - {slot.requiredPlaystyle}</CardDescription>
+                <CardDescription>{slot.requiredRole} - {slot.requiredPlaystyle || 'No playstyle set'}</CardDescription>
             </div>
              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
@@ -210,7 +210,7 @@ function SlotCard({ slot }: { slot: RosterSlot }) {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will permanently delete the '{slot.slotName}' slot. This action cannot be undone.
+                        This will permanently delete the &apos;{slot.slotName}&apos; slot. This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -247,9 +247,13 @@ export default function RosterManagementPage() {
     if (!firestore || !user || !orgProfile) return;
     setIsSubmitting(true);
     
+    // Auto-assign slot name from the role
+    const slotName = ROLE_TO_SLOT_NAME[data.requiredRole] || data.requiredRole;
+    
     const slotsCollectionRef = collection(firestore, 'roster_slots');
     const newSlotData = {
       ...data,
+      slotName,
       organizationId: orgId,
       organizationManagerUserId: user.uid,
       playerId: data.playerId || null,
@@ -276,21 +280,61 @@ export default function RosterManagementPage() {
       });
   };
 
+  const handleGenerateDefaultSlots = async () => {
+    if (!firestore || !user || !orgProfile) return;
+    setIsSubmitting(true);
+    const slotsCollection = collection(firestore, 'roster_slots');
+    const defaultSlots = [
+      { role: 'IGL', slotName: 'IGL' },
+      { role: 'Assaulter', slotName: 'Assaulter' },
+      { role: 'Entry Fragger', slotName: 'Entry Fragger' },
+      { role: 'Support', slotName: 'Support' },
+      { role: 'Substitute', slotName: 'Substitute' },
+    ];
+    try {
+      await Promise.all(defaultSlots.map(slot => 
+        addDoc(slotsCollection, {
+          organizationId: orgId,
+          organizationManagerUserId: user.uid,
+          slotName: slot.slotName,
+          status: 'Vacant',
+          requiredRole: slot.role,
+          requiredPlaystyle: 'Balanced',
+          minFdRatio: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+      ));
+      toast({ title: 'Success', description: '5 default vacant roster slots created (IGL, Assaulter, Entry Fragger, Support, Substitute).' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not create default slots.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const isLoading = isOrgLoading || isRosterLoading;
 
   return (
     <div>
         <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold font-headline">Manage Roster</h2>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Roster Slot</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader><DialogTitle>Create New Roster Slot</DialogTitle></DialogHeader>
-                    <RosterSlotForm onSubmit={handleCreate} isSubmitting={isSubmitting} />
-                </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+                {(!rosterSlots || rosterSlots.length === 0) && (
+                    <Button variant="outline" onClick={handleGenerateDefaultSlots} disabled={isSubmitting}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create Default Slots
+                    </Button>
+                )}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Roster Slot</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader><DialogTitle>Create New Roster Slot</DialogTitle></DialogHeader>
+                        <RosterSlotForm onSubmit={handleCreate} isSubmitting={isSubmitting} />
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
         {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -305,7 +349,12 @@ export default function RosterManagementPage() {
         ) : (
             <Card className="text-center py-12">
                 <CardHeader><CardTitle>No Roster Slots</CardTitle></CardHeader>
-                <CardContent><p>You haven't created any roster slots yet. Click "Add Roster Slot" to begin.</p></CardContent>
+                <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">You don&apos;t have any roster slots yet. You can create the standard 5 slots automatically or add custom slots manually.</p>
+                    <Button onClick={handleGenerateDefaultSlots} disabled={isSubmitting}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create Default Slots (IGL, Assaulter, Entry Fragger, Support, Substitute)
+                    </Button>
+                </CardContent>
             </Card>
         )}
     </div>

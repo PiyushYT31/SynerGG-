@@ -52,6 +52,25 @@ export interface PlayerProfile {
   verifiedUid?: string;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: 'Owner' | 'Co-owner' | 'Coach' | 'Manager' | 'Analyst';
+  contactNumber?: string;
+  pastExperience?: string;
+  seekingPlayerType?: string;
+  bio?: string;
+}
+
+export const ROLE_TO_SLOT_NAME: Record<string, string> = {
+  'IGL': 'IGL',
+  'Assaulter': 'Assaulter',
+  'Entry Fragger': 'Entry Fragger',
+  'Support': 'Support',
+  'Substitute': 'Substitute',
+  'Sniper': 'Sniper',
+};
+
 export interface OrganizationProfile {
   id: string;
   userId: string;
@@ -68,9 +87,11 @@ export interface OrganizationProfile {
   email: string;
   phoneNumber?: string;
   owner: string;
+  manager?: string;
   coOwner?: string;
   coach?: string;
   analyst?: string;
+  teamMembers?: TeamMember[];
 }
 
 export interface RosterSlot {

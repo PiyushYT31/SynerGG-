@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Users } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type OrganizationProfile } from '@/lib/types';
@@ -52,6 +52,28 @@ const formSchema = z.object({
   description: z.string().optional(),
   achievements: z.string().optional(),
   socialLinks: z.string().optional(),
+  // Owner details
+  owner: z.string().optional(),
+  ownerContact: z.string().optional(),
+  ownerExperience: z.string().optional(),
+  ownerSeekingType: z.string().optional(),
+  // Manager details
+  manager: z.string().optional(),
+  managerContact: z.string().optional(),
+  managerExperience: z.string().optional(),
+  managerSeekingType: z.string().optional(),
+  // Co-Owner details
+  coOwner: z.string().optional(),
+  coOwnerContact: z.string().optional(),
+  coOwnerExperience: z.string().optional(),
+  coOwnerSeekingType: z.string().optional(),
+  // Coach details
+  coach: z.string().optional(),
+  coachContact: z.string().optional(),
+  coachExperience: z.string().optional(),
+  coachSeekingType: z.string().optional(),
+  // Analyst
+  analyst: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -67,6 +89,23 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
       description: '',
       achievements: '',
       socialLinks: '',
+      owner: '',
+      ownerContact: '',
+      ownerExperience: '',
+      ownerSeekingType: '',
+      manager: '',
+      managerContact: '',
+      managerExperience: '',
+      managerSeekingType: '',
+      coOwner: '',
+      coOwnerContact: '',
+      coOwnerExperience: '',
+      coOwnerSeekingType: '',
+      coach: '',
+      coachContact: '',
+      coachExperience: '',
+      coachSeekingType: '',
+      analyst: '',
     },
   });
 
@@ -92,6 +131,12 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
 
   useEffect(() => {
     if (profile) {
+      const ownerMember = profile.teamMembers?.find(m => m.role === 'Owner');
+      const managerMember = profile.teamMembers?.find(m => m.role === 'Manager');
+      const coOwnerMember = profile.teamMembers?.find(m => m.role === 'Co-owner');
+      const coachMember = profile.teamMembers?.find(m => m.role === 'Coach');
+      const analystMember = profile.teamMembers?.find(m => m.role === 'Analyst');
+
       form.reset({
         name: profile.name,
         logoUrl: profile.logoUrl || '',
@@ -100,6 +145,23 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
         description: profile.description || '',
         achievements: profile.achievements?.join('\n') || '',
         socialLinks: profile.socialLinks?.map(l => `${l.name},${l.url}`).join('\n') || '',
+        owner: ownerMember?.name || profile.owner || '',
+        ownerContact: ownerMember?.contactNumber || '',
+        ownerExperience: ownerMember?.pastExperience || '',
+        ownerSeekingType: ownerMember?.seekingPlayerType || '',
+        manager: managerMember?.name || profile.manager || '',
+        managerContact: managerMember?.contactNumber || '',
+        managerExperience: managerMember?.pastExperience || '',
+        managerSeekingType: managerMember?.seekingPlayerType || '',
+        coOwner: coOwnerMember?.name || profile.coOwner || '',
+        coOwnerContact: coOwnerMember?.contactNumber || '',
+        coOwnerExperience: coOwnerMember?.pastExperience || '',
+        coOwnerSeekingType: coOwnerMember?.seekingPlayerType || '',
+        coach: coachMember?.name || profile.coach || '',
+        coachContact: coachMember?.contactNumber || '',
+        coachExperience: coachMember?.pastExperience || '',
+        coachSeekingType: coachMember?.seekingPlayerType || '',
+        analyst: analystMember?.name || profile.analyst || '',
       });
     }
   }, [profile, form]);
@@ -244,6 +306,103 @@ function EditOrganizationForm({ orgId, profile, onSave }: { orgId: string; profi
             </FormItem>
           )}
         />
+
+        {/* Team Management */}
+        <div className="border-t pt-8 space-y-6">
+          <div>
+            <h3 className="text-xl font-bold font-headline flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Team Management
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Provide contact number, past experience, and what type of players you are seeking. Each member gets a public sub-profile page that players can view.
+            </p>
+          </div>
+
+          {/* Owner */}
+          <div className="p-4 rounded-lg border bg-muted/20 space-y-4">
+            <h4 className="font-semibold text-primary">Owner</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="owner" render={({ field }) => (
+                <FormItem><FormLabel>Owner Name</FormLabel><FormControl><Input placeholder="Owner name" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="ownerContact" render={({ field }) => (
+                <FormItem><FormLabel>Contact Number</FormLabel><FormControl><Input placeholder="+91 9876543210" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="ownerExperience" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>Past Experience</FormLabel><FormControl><Textarea placeholder="Owner past esports experience..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="ownerSeekingType" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>What type of players are you seeking?</FormLabel><FormControl><Textarea placeholder="Seeking player criteria..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+          </div>
+
+          {/* Manager */}
+          <div className="p-4 rounded-lg border bg-muted/20 space-y-4">
+            <h4 className="font-semibold text-primary">Manager</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="manager" render={({ field }) => (
+                <FormItem><FormLabel>Manager Name</FormLabel><FormControl><Input placeholder="Manager name" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="managerContact" render={({ field }) => (
+                <FormItem><FormLabel>Contact Number</FormLabel><FormControl><Input placeholder="+91 9876543210" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="managerExperience" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>Past Experience</FormLabel><FormControl><Textarea placeholder="Manager past esports experience..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="managerSeekingType" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>What type of players are you seeking?</FormLabel><FormControl><Textarea placeholder="Seeking player criteria..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+          </div>
+
+          {/* Co-Owner */}
+          <div className="p-4 rounded-lg border bg-muted/20 space-y-4">
+            <h4 className="font-semibold text-primary">Co-Owner</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="coOwner" render={({ field }) => (
+                <FormItem><FormLabel>Co-Owner Name</FormLabel><FormControl><Input placeholder="Co-Owner name" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="coOwnerContact" render={({ field }) => (
+                <FormItem><FormLabel>Contact Number</FormLabel><FormControl><Input placeholder="+91 9876543210" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="coOwnerExperience" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>Past Experience</FormLabel><FormControl><Textarea placeholder="Co-Owner past esports experience..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="coOwnerSeekingType" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>What type of players are you seeking?</FormLabel><FormControl><Textarea placeholder="Seeking player criteria..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+          </div>
+
+          {/* Coach */}
+          <div className="p-4 rounded-lg border bg-muted/20 space-y-4">
+            <h4 className="font-semibold text-primary">Coach</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="coach" render={({ field }) => (
+                <FormItem><FormLabel>Coach Name</FormLabel><FormControl><Input placeholder="Coach name" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="coachContact" render={({ field }) => (
+                <FormItem><FormLabel>Contact Number</FormLabel><FormControl><Input placeholder="+91 9876543210" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="coachExperience" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>Past Experience</FormLabel><FormControl><Textarea placeholder="Coach past esports experience..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="coachSeekingType" render={({ field }) => (
+                <FormItem className="md:col-span-2"><FormLabel>What type of players are you seeking?</FormLabel><FormControl><Textarea placeholder="Seeking player criteria..." {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+          </div>
+
+          {/* Analyst */}
+          <div className="p-4 rounded-lg border bg-muted/20 space-y-4">
+            <h4 className="font-semibold text-primary">Analyst</h4>
+            <FormField control={form.control} name="analyst" render={({ field }) => (
+              <FormItem><FormLabel>Analyst Name</FormLabel><FormControl><Input placeholder="Analyst name" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+          </div>
+        </div>
+
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Saving...' : <><Save className="mr-2 h-4 w-4" /> Save Changes</>}
         </Button>
@@ -281,6 +440,57 @@ export default function EditOrganizationProfilePage() {
             };
         }) || [];
 
+        const teamMembers: any[] = [];
+        if (values.owner) {
+            teamMembers.push({
+                id: profile.teamMembers?.find(m => m.role === 'Owner')?.id || 'owner-' + Date.now(),
+                name: values.owner,
+                role: 'Owner',
+                contactNumber: values.ownerContact || '',
+                pastExperience: values.ownerExperience || '',
+                seekingPlayerType: values.ownerSeekingType || '',
+            });
+        }
+        if (values.manager) {
+            teamMembers.push({
+                id: profile.teamMembers?.find(m => m.role === 'Manager')?.id || 'manager-' + Date.now(),
+                name: values.manager,
+                role: 'Manager',
+                contactNumber: values.managerContact || '',
+                pastExperience: values.managerExperience || '',
+                seekingPlayerType: values.managerSeekingType || '',
+            });
+        }
+        if (values.coOwner) {
+            teamMembers.push({
+                id: profile.teamMembers?.find(m => m.role === 'Co-owner')?.id || 'coowner-' + Date.now(),
+                name: values.coOwner,
+                role: 'Co-owner',
+                contactNumber: values.coOwnerContact || '',
+                pastExperience: values.coOwnerExperience || '',
+                seekingPlayerType: values.coOwnerSeekingType || '',
+            });
+        }
+        if (values.coach) {
+            teamMembers.push({
+                id: profile.teamMembers?.find(m => m.role === 'Coach')?.id || 'coach-' + Date.now(),
+                name: values.coach,
+                role: 'Coach',
+                contactNumber: values.coachContact || '',
+                pastExperience: values.coachExperience || '',
+                seekingPlayerType: values.coachSeekingType || '',
+            });
+        }
+        if (values.analyst) {
+            teamMembers.push({
+                id: profile.teamMembers?.find(m => m.role === 'Analyst')?.id || 'analyst-' + Date.now(),
+                name: values.analyst,
+                role: 'Analyst',
+                contactNumber: '',
+                pastExperience: '',
+                seekingPlayerType: '',
+            });
+        }
 
         const updatedData = {
             name: values.name,
@@ -290,6 +500,12 @@ export default function EditOrganizationProfilePage() {
             description: values.description,
             achievements: achievementsArray,
             socialLinks: socialLinksArray,
+            owner: values.owner || profile.owner || '',
+            manager: values.manager || '',
+            coOwner: values.coOwner || '',
+            coach: values.coach || '',
+            analyst: values.analyst || '',
+            teamMembers: teamMembers,
             updatedAt: new Date().toISOString(),
         };
 

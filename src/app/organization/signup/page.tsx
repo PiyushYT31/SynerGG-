@@ -13,13 +13,13 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
@@ -36,11 +36,29 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
   phoneNumber: z.string().optional(),
+  // Owner details
   owner: z.string().min(2, {
     message: 'Owner name must be at least 2 characters.',
   }),
+  ownerContact: z.string().optional(),
+  ownerExperience: z.string().optional(),
+  ownerSeekingType: z.string().optional(),
+  // Manager details
+  manager: z.string().optional(),
+  managerContact: z.string().optional(),
+  managerExperience: z.string().optional(),
+  managerSeekingType: z.string().optional(),
+  // Co-Owner details
   coOwner: z.string().optional(),
+  coOwnerContact: z.string().optional(),
+  coOwnerExperience: z.string().optional(),
+  coOwnerSeekingType: z.string().optional(),
+  // Coach details
   coach: z.string().optional(),
+  coachContact: z.string().optional(),
+  coachExperience: z.string().optional(),
+  coachSeekingType: z.string().optional(),
+  // Analyst
   analyst: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -64,8 +82,21 @@ export default function OrganizationSignUp() {
       confirmPassword: '',
       phoneNumber: '',
       owner: '',
+      ownerContact: '',
+      ownerExperience: '',
+      ownerSeekingType: '',
+      manager: '',
+      managerContact: '',
+      managerExperience: '',
+      managerSeekingType: '',
       coOwner: '',
+      coOwnerContact: '',
+      coOwnerExperience: '',
+      coOwnerSeekingType: '',
       coach: '',
+      coachContact: '',
+      coachExperience: '',
+      coachSeekingType: '',
       analyst: '',
     },
   });
@@ -83,6 +114,59 @@ export default function OrganizationSignUp() {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
 
+        // Build team members array
+        const teamMembers: any[] = [];
+        if (values.owner) {
+            teamMembers.push({
+                id: 'owner-' + Date.now(),
+                name: values.owner,
+                role: 'Owner',
+                contactNumber: values.ownerContact || '',
+                pastExperience: values.ownerExperience || '',
+                seekingPlayerType: values.ownerSeekingType || '',
+            });
+        }
+        if (values.manager) {
+            teamMembers.push({
+                id: 'manager-' + Date.now(),
+                name: values.manager,
+                role: 'Manager',
+                contactNumber: values.managerContact || '',
+                pastExperience: values.managerExperience || '',
+                seekingPlayerType: values.managerSeekingType || '',
+            });
+        }
+        if (values.coOwner) {
+            teamMembers.push({
+                id: 'coowner-' + Date.now(),
+                name: values.coOwner,
+                role: 'Co-owner',
+                contactNumber: values.coOwnerContact || '',
+                pastExperience: values.coOwnerExperience || '',
+                seekingPlayerType: values.coOwnerSeekingType || '',
+            });
+        }
+        if (values.coach) {
+            teamMembers.push({
+                id: 'coach-' + Date.now(),
+                name: values.coach,
+                role: 'Coach',
+                contactNumber: values.coachContact || '',
+                pastExperience: values.coachExperience || '',
+                seekingPlayerType: values.coachSeekingType || '',
+            });
+        }
+        if (values.analyst) {
+            teamMembers.push({
+                id: 'analyst-' + Date.now(),
+                name: values.analyst,
+                role: 'Analyst',
+                contactNumber: '',
+                pastExperience: '',
+                seekingPlayerType: '',
+            });
+        }
+
         const orgCollection = collection(firestore, 'organization_profiles');
         
         const orgProfileData = {
@@ -92,9 +176,11 @@ export default function OrganizationSignUp() {
             phoneNumber: values.phoneNumber || '',
             logoUrl: '',
             owner: values.owner,
+            manager: values.manager || '',
             coOwner: values.coOwner || '',
             coach: values.coach || '',
             analyst: values.analyst || '',
+            teamMembers: teamMembers,
             isVerified: false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -102,24 +188,24 @@ export default function OrganizationSignUp() {
 
         const docRef = await addDoc(orgCollection, orgProfileData);
 
-        // Create default roster slots
+        // Create default roster slots — slot name auto-set from role
         const slotsCollection = collection(firestore, 'roster_slots');
         const defaultSlots = [
-            { role: 'IGL', playstyle: 'Tactical' },
-            { role: 'Assaulter', playstyle: 'Aggressive' },
-            { role: 'Entry Fragger', playstyle: 'Aggressive' },
-            { role: 'Support', playstyle: 'Balanced' },
-            { role: 'Substitute', playstyle: 'Balanced' },
+            { role: 'IGL', slotName: 'IGL' },
+            { role: 'Assaulter', slotName: 'Assaulter' },
+            { role: 'Entry Fragger', slotName: 'Entry Fragger' },
+            { role: 'Support', slotName: 'Support' },
+            { role: 'Substitute', slotName: 'Substitute' },
         ];
         
         await Promise.all(defaultSlots.map(slot => 
             addDoc(slotsCollection, {
                 organizationId: docRef.id,
                 organizationManagerUserId: user.uid,
-                slotName: slot.role === 'Substitute' ? 'Substitute' : `Main ${slot.role}`,
+                slotName: slot.slotName,
                 status: 'Vacant',
                 requiredRole: slot.role,
-                requiredPlaystyle: slot.playstyle,
+                requiredPlaystyle: '',
                 minFdRatio: 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -127,7 +213,7 @@ export default function OrganizationSignUp() {
         ));
         toast({
             title: "Profile Created!",
-            description: "Your organization profile has been created successfully.",
+            description: "Your organization profile has been created with 5 default roster slots.",
         });
 
         router.push(`/organization/${docRef.id}`);
@@ -156,7 +242,7 @@ export default function OrganizationSignUp() {
             </div>
         </header>
         <main className="flex-1 flex items-center justify-center py-12">
-            <Card className="w-full max-w-2xl mx-4">
+            <Card className="w-full max-w-3xl mx-4">
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">Organization / Team Sign Up</CardTitle>
                     <CardDescription>
@@ -166,149 +252,351 @@ export default function OrganizationSignUp() {
                 <CardContent>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="organizationName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Organization/Team Name</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g. Team Soul" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Contact Email</FormLabel>
-                                            <FormControl>
-                                                <Input type="email" placeholder="contact@example.com" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="phoneNumber"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Phone Number (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="+91 1234567890" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="owner"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Owner</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g. John Doe" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="coOwner"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Co-owner (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g. Jane Smith" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="coach"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Coach (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g. Mike Ross" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="analyst"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Analyst (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g. Rachel Zane" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Password</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
-                                                        onClick={() => setShowPassword(prev => !prev)}
-                                                    >
-                                                        {showPassword ? <EyeOff /> : <Eye />}
-                                                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="confirmPassword"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Confirm Password</FormLabel>
-                                            <FormControl>
-                                                 <div className="relative">
-                                                    <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
-                                                        onClick={() => setShowConfirmPassword(prev => !prev)}
-                                                    >
-                                                        {showConfirmPassword ? <EyeOff /> : <Eye />}
-                                                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            {/* Basic Info */}
+                            <div>
+                                <h3 className="text-lg font-semibold mb-4 text-primary">Basic Information</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="organizationName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Organization/Team Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Team Soul" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Contact Email</FormLabel>
+                                                <FormControl>
+                                                    <Input type="email" placeholder="contact@example.com" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="phoneNumber"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Phone Number (Optional)</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="+91 1234567890" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="analyst"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Analyst (Optional)</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Rachel Zane" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Password</FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                            onClick={() => setShowPassword(prev => !prev)}
+                                                        >
+                                                            {showPassword ? <EyeOff /> : <Eye />}
+                                                            <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                                                        </Button>
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="confirmPassword"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Confirm Password</FormLabel>
+                                                <FormControl>
+                                                     <div className="relative">
+                                                        <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="absolute top-0 right-0 h-full w-10 text-muted-foreground"
+                                                            onClick={() => setShowConfirmPassword(prev => !prev)}
+                                                        >
+                                                            {showConfirmPassword ? <EyeOff /> : <Eye />}
+                                                            <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                                                        </Button>
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                             </div>
+
+                            {/* Owner Details */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-semibold mb-4 text-primary">Owner Details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="owner"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Owner Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. John Doe" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="ownerContact"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Contact Number</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="+91 9876543210" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="ownerExperience"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>Past Experience</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe your past esports experience..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="ownerSeekingType"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>What type of players are you seeking?</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe the kind of players you're looking for..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Manager Details */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-semibold mb-4 text-primary">Manager Details (Optional)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="manager"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Manager Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Alex Johnson" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="managerContact"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Contact Number</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="+91 9876543210" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="managerExperience"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>Past Experience</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe manager's past esports experience..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="managerSeekingType"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>What type of players are you seeking?</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe the kind of players you're looking for..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Co-Owner Details */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-semibold mb-4 text-primary">Co-Owner Details (Optional)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="coOwner"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Co-Owner Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Jane Smith" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="coOwnerContact"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Contact Number</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="+91 9876543210" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="coOwnerExperience"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>Past Experience</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe co-owner's past esports experience..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="coOwnerSeekingType"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>What type of players are you seeking?</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe the kind of players you're looking for..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Coach Details */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-semibold mb-4 text-primary">Coach Details (Optional)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="coach"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Coach Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g. Mike Ross" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="coachContact"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Contact Number</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="+91 9876543210" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="coachExperience"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>Past Experience</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe coach's past esports experience..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="coachSeekingType"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>What type of players are you seeking?</FormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="Describe the kind of players you're looking for..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
                             <Button type="submit" className="w-full">Create Profile</Button>
                         </form>
                     </Form>
