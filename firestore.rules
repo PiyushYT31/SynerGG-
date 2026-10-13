@@ -126,20 +126,36 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Roster slots are publicly readable so players can see vacancies, but
-     * only the organization manager can create, update, or delete their own roster slots.
+     * Checks if the authenticated user is the player currently assigned to a roster slot,
+     * and they are only setting the slot to Vacant (i.e., leaving the org).
+     * This allows a player to remove themselves from a roster without org manager intervention.
+     */
+    function isPlayerLeavingSlot() {
+      return isSignedIn()
+        && isExistingDoc()
+        && resource.data.playerId != null
+        && get(/databases/$(database)/documents/player_profiles/$(resource.data.playerId)).data.userId == request.auth.uid
+        && request.resource.data.status == 'Vacant'
+        && request.resource.data.playerId == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'playerId', 'updatedAt']);
+    }
+
+    /**
+     * @description Roster slots are publicly readable so players can see vacancies.
+     * The organization manager can create, update, or delete their own roster slots.
+     * Additionally, a player who is currently assigned to a slot can leave (set it to Vacant).
      * NOTE: This rule requires an `organizationManagerUserId` field to be denormalized
      * onto each RosterSlot document for the ownership check.
      * @path /roster_slots/{rosterSlotId}
-     * @allow (update) An org manager updating a slot where `resource.data.organizationManagerUserId` matches their `auth.uid`.
+     * @allow (update) An org manager updating a slot, OR a player leaving their own slot.
      * @deny (create) A user attempting to create a roster slot for an organization they don't manage.
-     * @principle Enforces a "Public Read, Owner Write" model for discoverable roster vacancies.
+     * @principle Enforces a \"Public Read, Owner Write\" model with player self-removal capability.
      */
     match /roster_slots/{rosterSlotId} {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn() && request.resource.data.organizationManagerUserId == request.auth.uid;
-      allow update: if isOwner(resource.data.organizationManagerUserId) && isExistingDoc() && request.resource.data.organizationManagerUserId == resource.data.organizationManagerUserId;
+      allow update: if (isOwner(resource.data.organizationManagerUserId) && isExistingDoc() && request.resource.data.organizationManagerUserId == resource.data.organizationManagerUserId) || isPlayerLeavingSlot();
       allow delete: if isOwner(resource.data.organizationManagerUserId) && isExistingDoc();
     }
 

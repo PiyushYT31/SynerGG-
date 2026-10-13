@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, collection, query, where, addDoc } from 'firebase/firestore';
+import { doc, collection, query, where, addDoc, updateDoc, getDocs, writeBatch } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -11,12 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp, LogOut, Youtube, Instagram, Twitter } from 'lucide-react';
+import { User, Briefcase, Phone, Mail, ShieldCheck, Users, Edit, BrainCircuit, Swords, Heart, Target, Crosshair, Lock, Unlock, UserPlus, LayoutGrid, TrendingUp, LogOut, Youtube, Instagram, Twitter, DoorOpen, UserCircle } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const roleIcons: { [key: string]: React.ReactNode } = {
     'IGL': <BrainCircuit className="h-4 w-4" />,
@@ -204,6 +206,7 @@ export default function OrganizationProfilePage() {
     const orgId = params.orgId as string;
     const router = useRouter();
     const { toast } = useToast();
+    const [isLeaving, setIsLeaving] = useState(false);
 
     const handleLogout = async () => {
         if (!auth) return;
@@ -244,6 +247,53 @@ export default function OrganizationProfilePage() {
     ), [firestore, user]);
     const { data: orgProfiles } = useCollection<OrganizationProfile>(orgProfileQuery);
     const currentOrgProfile = orgProfiles?.[0] ?? null;
+
+    // Check if the current player is in this org's roster (locked in a slot)
+    const playerSlotInThisOrg = rosterSlots?.find(
+        (slot) => slot.playerId === currentPlayerProfile?.id && slot.status === 'Locked'
+    ) ?? null;
+    const isPlayerInThisOrg = !!playerSlotInThisOrg;
+
+    const handleLeaveOrg = async () => {
+        if (!firestore || !currentPlayerProfile || !playerSlotInThisOrg) return;
+        setIsLeaving(true);
+        try {
+            const batch = writeBatch(firestore);
+
+            // 1. Make the roster slot vacant
+            const slotRef = doc(firestore, 'roster_slots', playerSlotInThisOrg.id);
+            batch.update(slotRef, {
+                status: 'Vacant',
+                playerId: null,
+                updatedAt: new Date().toISOString(),
+            });
+
+            // 2. Delete any tryout requests between this player and org
+            const requestsQuery = query(
+                collection(firestore, 'tryout_requests'),
+                where('organizationId', '==', orgId),
+                where('playerId', '==', currentPlayerProfile.id)
+            );
+            const requestsSnapshot = await getDocs(requestsQuery);
+            requestsSnapshot.forEach((docSnap) => {
+                batch.delete(docSnap.ref);
+            });
+
+            await batch.commit();
+
+            toast({ title: '✅ Left Organization', description: `You have successfully left ${profile?.name}. The roster slot is now vacant.` });
+            router.refresh();
+        } catch (error: any) {
+            console.error('Leave org error:', error);
+            if (error.code === 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Action Blocked', description: 'Firebase Security Rules are blocking this. You must update the rules in the Firebase Console.' });
+            } else {
+                toast({ variant: 'destructive', title: 'Failed to Leave', description: error.message || 'Could not leave the organization.' });
+            }
+        } finally {
+            setIsLeaving(false);
+        }
+    };
 
 
     if (isLoading) {
@@ -292,6 +342,33 @@ export default function OrganizationProfilePage() {
                             </Button>
                         )}
                         <Button asChild variant="outline"><Link href="/players">Explore Players</Link></Button>
+                        {isPlayerInThisOrg && currentPlayerProfile && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" disabled={isLeaving}>
+                                        <DoorOpen className="mr-2 h-4 w-4" />
+                                        {isLeaving ? 'Leaving...' : 'Leave Organization'}
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Leave {profile?.name}?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Are you sure you want to leave this organization? Your roster slot will become <strong>vacant</strong> and you will no longer be part of this team. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            className="bg-destructive hover:bg-destructive/90"
+                                            onClick={handleLeaveOrg}
+                                        >
+                                            Yes, Leave Organization
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
                         {user && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -301,6 +378,23 @@ export default function OrganizationProfilePage() {
                                     </Avatar>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                    {currentPlayerProfile && (
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link href={`/player/${currentPlayerProfile.id}`}>
+                                                <UserCircle className="mr-2 h-4 w-4" />
+                                                <span>Profile</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    {currentOrgProfile && (
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link href={`/organization/${currentOrgProfile.id}`}>
+                                                <UserCircle className="mr-2 h-4 w-4" />
+                                                <span>Profile</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                                         <LogOut className="mr-2 h-4 w-4" />
                                         <span>Logout</span>

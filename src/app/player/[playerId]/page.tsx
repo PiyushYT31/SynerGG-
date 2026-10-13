@@ -11,12 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart, Instagram, Twitter, Copy, ShieldCheck, AlertCircle, Upload, CheckCircle2, Loader2, XCircle, ImageIcon } from 'lucide-react';
+import { User, Shield, Swords, Heart, Crosshair, Smartphone, Target, Scale, BrainCircuit, Youtube, Mail, Phone, Fingerprint, Gamepad2, Users, FileText, Edit, Trophy, ClipboardList, UserPlus, Lock, LogOut, Link2, Check, BarChart, Instagram, Twitter, Copy, ShieldCheck, AlertCircle, Upload, CheckCircle2, Loader2, XCircle, ImageIcon, UserCircle } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PlayerRadarChart } from '@/components/player-radar-chart';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
@@ -405,6 +405,23 @@ export default function PlayerProfilePage() {
                       </Avatar>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {currentPlayerProfile && (
+                          <DropdownMenuItem asChild className="cursor-pointer">
+                              <Link href={`/player/${currentPlayerProfile.id}`}>
+                                  <UserCircle className="mr-2 h-4 w-4" />
+                                  <span>Profile</span>
+                              </Link>
+                          </DropdownMenuItem>
+                      )}
+                      {currentOrgProfile && (
+                          <DropdownMenuItem asChild className="cursor-pointer">
+                              <Link href={`/organization/${currentOrgProfile.id}`}>
+                                  <UserCircle className="mr-2 h-4 w-4" />
+                                  <span>Profile</span>
+                              </Link>
+                          </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Logout</span>
